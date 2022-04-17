@@ -50,6 +50,7 @@ bevy_asset_loader = "0.10.0"
 bevy_kira_audio = "0.9.0"
 bevy_prototype_debug_lines = "0.6.1"
 bevy_tweening = "0.4.0"
+bevy_hanabi = { git = "https://github.com/djeedai/bevy_hanabi", branch = "main", features = ["2d"] }
 leafwing_input_manager = { git = "https://github.com/Leafwing-Studios/leafwing_input_manager", branch = "dev" }
 petitset = "0.2.1"
 fastrand = "1.7.0"
