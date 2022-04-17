@@ -1,5 +1,5 @@
 [package]
-name = "placeholder_name"
+name = "the_last_necromancer"
 version = "0.1.0"
 authors = ["pieroluha <pieroluha@gmail.com>"]
 edition = "2021"
@@ -20,14 +20,11 @@ strip = true
 [features]
 default = [
     "bevy/bevy_winit",
-    # 3D
-    "bevy/render",
-    # 2D
-    #"bevy/bevy_render",        # Rendering framework core
-    #"bevy/bevy_core_pipeline", # Higher-level rendering abstractions
-    #"bevy/bevy_sprite",        # 2D (sprites) rendering
-    #"bevy/bevy_text",          # Text/font rendering
-    #"bevy/bevy_ui",   
+    "bevy/bevy_render",        # Rendering framework core
+    "bevy/bevy_core_pipeline", # Higher-level rendering abstractions
+    "bevy/bevy_sprite",        # 2D (sprites) rendering
+    "bevy/bevy_text",          # Text/font rendering
+    "bevy/bevy_ui",   
     "bevy/png",
     "bevy/x11",
     "bevy_kira_audio/ogg",

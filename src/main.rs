@@ -35,7 +35,7 @@ fn main() {
 
     app.insert_resource(ClearColor(SLATE))
         .insert_resource(WindowDescriptor {
-            title: "placeholder_title".to_string(),
+            title: "The Last Necromancer".to_string(),
             width: DEFAULT_WIN_WIDTH,
             height: DEFAULT_WIN_HEIGHT,
             ..default()
