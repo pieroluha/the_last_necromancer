@@ -10,13 +10,6 @@ fn add_2d_camera(mut commands: Commands) {
         .insert(Name::new("MainCamera"));
 }
 
-//fn add_3d_camera(mut commands: Commands) {
-//    commands
-//        .spawn_bundle(PerspectiveCameraBundle::default())
-//        .insert(MainCamera)
-//        .insert(Name::new("MainCamera"));
-//}
-
 fn add_ui_camera(mut commands: Commands) {
     commands.spawn_bundle(UiCameraBundle::default());
 }
