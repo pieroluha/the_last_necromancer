@@ -4,10 +4,12 @@ mod camera;
 mod debug_panel;
 mod input;
 mod projectiles;
+mod global_components;
 mod prelude {
     pub use crate::camera::*;
     pub use crate::input::*;
     pub use crate::projectiles::*;
+    pub use crate::global_components::*;
     pub use bevy::prelude::*;
 
     #[cfg(feature = "dev")]
@@ -28,12 +30,6 @@ mod prelude {
     pub const DEFAULT_WIN_HEIGHT: f32 = 600.0;
     pub const SLATE: Color = Color::rgb(38.0 / 255.0, 40.0 / 255.0, 42.0 / 255.0);
 
-    #[derive(Component)]
-    pub struct Life(u8);
-    #[derive(Component)]
-    pub struct Mana(u32);
-    #[derive(Component)]
-    pub struct Velocity(f32);
 }
 
 use prelude::*;
