@@ -39,6 +39,6 @@ impl Plugin for DebugPanelPlugin {
         app.add_plugin(WorldInspectorPlugin::new())
             .add_plugin(FrameTimeDiagnosticsPlugin)
             .add_plugin(InspectorPlugin::<DebugPanel>::new())
-            .add_system_set(SystemSet::on_update(GameState::AssetLoad).with_system(debug_fps_information));
+            .add_system_set(SystemSet::on_update(Playing).with_system(debug_fps_information));
     }
 }
