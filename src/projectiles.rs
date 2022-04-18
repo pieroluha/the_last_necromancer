@@ -1,3 +1,4 @@
+use crate::global_components::*;
 use crate::prelude::*;
 use bevy::render::{render_resource::WgpuFeatures, settings::WgpuSettings};
 use bevy::sprite::MaterialMesh2dBundle;
@@ -113,6 +114,8 @@ fn spawn_projectile_countdown(
     spawn_countdown.tick(time.delta());
 
     if spawn_countdown.finished() {
+        let mut velocity = Velocity(Vec2::new(0.0, 2.0));
+        velocity.look_at(Vec2::new(1.0, 0.0));
         let child = commands
             .spawn_bundle(MaterialMesh2dBundle {
                 mesh: effects.fireball.mesh_handle.clone().into(),
@@ -120,6 +123,7 @@ fn spawn_projectile_countdown(
                 ..default()
             })
             .insert(Projectile(ProjectileType::Fireball))
+            .insert(velocity)
             .insert(DespawnOnEnd(Timer::from_seconds(20.0, false)))
             .insert(Name::new("Fireball"))
             .with_children(|p| {
@@ -131,6 +135,15 @@ fn spawn_projectile_countdown(
         commands.entity(projectile_parent).add_child(child);
 
         println!("Projectile spawned!");
+    }
+}
+
+fn move_projectiles(
+    time: Res<Time>,
+    mut query_projectiles: Query<(&mut Transform, &Velocity, &Projectile)>,
+) {
+    for (mut transform, velocity, projectile_type) in query_projectiles.iter_mut() {
+        transform.translation += velocity.extend(0.0) * time.delta_seconds() * 10.0;
     }
 }
 
@@ -158,6 +171,7 @@ impl Plugin for ProjectilesPlugin {
             .add_plugin(HanabiPlugin)
             .add_system_set(SystemSet::on_enter(AssetLoad).with_system(setup_effect_handles))
             .add_system_set(SystemSet::on_update(AssetLoad).with_system(spawn_projectile_countdown))
+            .add_system_set(SystemSet::on_update(AssetLoad).with_system(move_projectiles))
             .add_system_set(SystemSet::on_update(AssetLoad).with_system(despawn_on_end));
     }
 }
