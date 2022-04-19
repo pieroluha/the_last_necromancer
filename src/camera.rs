@@ -17,10 +17,12 @@ fn add_ui_camera(mut commands: Commands) {
         .insert(Name::new("UiCamera"));
 }
 
-fn edit_camera_scaling(mut query_camera: Query<&mut OrthographicProjection, With<MainCamera>>) {
-    let mut camera = query_camera.single_mut();
+fn edit_camera_scaling(mut query_camera: Query<(&mut OrthographicProjection, &mut Transform), With<MainCamera>>) {
+    let (mut camera, mut transform) = query_camera.single_mut();
     camera.scaling_mode = ScalingMode::FixedVertical;
     camera.scale = 200.0;
+    transform.translation.x = ARENA_OFFSET;
+    transform.translation.y = ARENA_OFFSET;
 }
 
 pub struct MyCameraPlugin;
