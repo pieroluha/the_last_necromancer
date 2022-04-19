@@ -9,6 +9,10 @@ pub struct Speed(pub f32);
 #[derive(Component, Deref, DerefMut)]
 pub struct Velocity(pub Vec2);
 impl Velocity {
+    pub fn init(pos: Vec3) -> Self {
+        Self(pos.truncate())
+    }
+
     pub fn look_at(&mut self, point: Vec2) {
         self.x = point.x - self.x;
         self.y = point.y - self.y;

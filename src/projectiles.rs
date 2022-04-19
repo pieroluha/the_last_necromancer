@@ -1,156 +1,102 @@
 use crate::global_components::*;
 use crate::prelude::*;
 use bevy::render::{render_resource::WgpuFeatures, settings::WgpuSettings};
-use bevy::sprite::MaterialMesh2dBundle;
-use bevy_hanabi::*;
-
-#[derive(PartialEq)]
-pub enum LaserType {
-    Holy,
-    Magic,
-}
 
 #[derive(PartialEq)]
 pub enum ProjectileType {
     Arrow,
     Fireball,
-    Laser(LaserType),
+    Laser,
 }
 
 #[derive(Component)]
 pub struct Projectile(ProjectileType);
 
 #[derive(Component, Deref, DerefMut)]
-pub struct DespawnOnEnd(Timer);
+pub struct DespawnTimer(Timer);
 
-#[derive(Deref, DerefMut)]
-pub struct SpawnCountdown(Timer);
-impl Default for SpawnCountdown {
-    fn default() -> Self {
-        Self(Timer::from_seconds(5.0, true))
-    }
-}
-
-struct Effect {
-    mesh_handle: Handle<Mesh>,
-    material_handle: Handle<ColorMaterial>,
-    effect_handle: Handle<EffectAsset>,
-    spawner: Spawner,
-}
-
-pub struct Effects {
-    //arrow: Effect,
-    fireball: Effect,
-    //laser: Effect,
-}
-impl Effects {
-    fn new_fireball(&self) -> ParticleEffectBundle {
-        let fireball = &self.fireball;
-        ParticleEffectBundle::new(fireball.effect_handle.clone()).with_spawner(fireball.spawner)
-    }
-}
+#[derive(Component, Deref, DerefMut)]
+pub struct ShootProjectileTimer(pub Timer);
 
 #[derive(Component)]
-struct ProjectileParent;
+struct ProjectileNode;
 
-fn setup_effect_handles(
-    mut effects: ResMut<Assets<EffectAsset>>,
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    let fireball_spawner = Spawner::rate(30.0.into());
-    let fireball_effect = effects.add(
-        EffectAsset {
-            name: "Fireball".into(),
-            capacity: 100,
-            spawner: fireball_spawner,
-            ..default()
-        }
-        .init(PositionCircleModifier {
-            radius: 0.5,
-            speed: 0.1.into(),
-            dimension: ShapeDimension::Surface,
-            ..default()
-        })
-        .render(SizeOverLifetimeModifier {
-            gradient: Gradient::constant(Vec2::splat(0.02)),
-        }),
-    );
-
-    let fireball = Effect {
-        mesh_handle: meshes
-            .add(Mesh::from(shape::Quad {
-                size: Vec2::splat(1.0),
-                ..default()
-            }))
-            .into(),
-        material_handle: materials.add(ColorMaterial {
-            color: Color::RED,
-            ..default()
-        }),
-        effect_handle: fireball_effect,
-        spawner: fireball_spawner,
-    };
-
-    commands.insert_resource(Effects { fireball });
-
+fn setup_projectile_parent(mut commands: Commands) {
     commands
         .spawn()
         .insert(GlobalTransform::default())
         .insert(Transform::default())
-        .insert(ProjectileParent)
-        .insert(Name::new("ProjectileParent"));
+        .insert(ProjectileNode)
+        .insert(Name::new("ProjectileNode"));
 }
 
-fn spawn_projectile_countdown(
+pub const FIREBALL_SPEED: f32 = 200.0;
+pub const MULTIPLIER: f32 = 3.0;
+
+fn enemy_shoot_projectile(
     time: Res<Time>,
-    effects: Res<Effects>,
-    query_parent: Query<Entity, With<ProjectileParent>>,
-    mut spawn_countdown: ResMut<SpawnCountdown>,
+    image_handles: Res<ImageHandles>,
+    animation_handles: Res<AnimationHandles>,
+    query_node: Query<Entity, With<ProjectileNode>>,
+    mut query_enemies: Query<(&Transform, &mut ShootProjectileTimer, &Enemy)>,
     mut commands: Commands,
 ) {
-    let projectile_parent = query_parent.single();
-    spawn_countdown.tick(time.delta());
+    for (enemy, mut timer, enemy_type) in query_enemies.iter_mut() {
+        timer.tick(time.delta());
 
-    if spawn_countdown.finished() {
-        let mut velocity = Velocity(Vec2::new(0.0, 2.0));
-        velocity.look_at(Vec2::new(1.0, 0.0));
-        let child = commands
-            .spawn_bundle(MaterialMesh2dBundle {
-                mesh: effects.fireball.mesh_handle.clone().into(),
-                material: effects.fireball.material_handle.clone(),
-                ..default()
-            })
-            .insert(Projectile(ProjectileType::Fireball))
-            .insert(velocity)
-            .insert(DespawnOnEnd(Timer::from_seconds(20.0, false)))
-            .insert(Name::new("Fireball"))
-            .with_children(|p| {
-                p.spawn_bundle(effects.new_fireball())
-                    .insert(Name::new("fireball_effect"));
-            })
-            .id();
+        if timer.just_finished() {
+            let parent_node = query_node.single();
+            let mut velocity = Velocity::init(enemy.translation);
+            velocity.look_at(Vec2::new(ARENA_OFFSET, ARENA_OFFSET));
 
-        commands.entity(projectile_parent).add_child(child);
+            let (projectile_type, image_handle, animation_handle) = match enemy_type.0 {
+                EnemyType::Mage(true) | EnemyType::Mage(false) => (
+                    ProjectileType::Fireball,
+                    image_handles.fireball.clone(),
+                    animation_handles.fireball.clone(),
+                ),
+                EnemyType::Archer(true) | EnemyType::Archer(false) => (
+                    ProjectileType::Fireball,
+                    image_handles.fireball.clone(),
+                    animation_handles.fireball.clone(),
+                ),
+            };
+            let child = commands
+                .spawn_bundle(SpriteSheetBundle {
+                    texture_atlas: image_handle,
+                    sprite: TextureAtlasSprite {
+                        custom_size: Some(Vec2::new(16.0, 16.0)),
+                        ..default()
+                    },
+                    transform: *enemy,
+                    ..default()
+                })
+                .insert(animation_handle)
+                .insert(Play)
+                .insert(velocity)
+                .insert(Speed(FIREBALL_SPEED))
+                .insert(Projectile(projectile_type))
+                .insert(DespawnTimer(Timer::from_seconds(5.0, false)))
+                .id();
 
-        println!("Projectile spawned!");
+            commands.entity(parent_node).add_child(child);
+        }
     }
 }
 
 fn move_projectiles(
     time: Res<Time>,
-    mut query_projectiles: Query<(&mut Transform, &Velocity, &Projectile)>,
+    mut query_projectiles: Query<(&mut Transform, &Velocity, &Speed, &Projectile)>,
 ) {
-    for (mut transform, velocity, projectile_type) in query_projectiles.iter_mut() {
-        transform.translation += velocity.extend(0.0) * time.delta_seconds() * 10.0;
+    for (mut transform, velocity, speed, projectile_type) in query_projectiles.iter_mut() {
+        transform.translation += velocity.extend(0.0) * time.delta_seconds() * speed.0;
     }
 }
 
-fn despawn_on_end(
+fn despawn_timer(
     time: Res<Time>,
     mut commands: Commands,
-    mut query_projectiles: Query<(&mut DespawnOnEnd, Entity), With<Projectile>>,
+    mut query_projectiles: Query<(&mut DespawnTimer, Entity), With<Projectile>>,
 ) {
     for (mut timer, projectile) in query_projectiles.iter_mut() {
         if timer.tick(time.delta()).just_finished() {
@@ -167,11 +113,10 @@ impl Plugin for ProjectilesPlugin {
         options
             .features
             .set(WgpuFeatures::VERTEX_WRITABLE_STORAGE, true);
-        app.init_resource::<SpawnCountdown>()
-            .add_plugin(HanabiPlugin)
-            .add_system_set(SystemSet::on_enter(AssetLoad).with_system(setup_effect_handles))
-            .add_system_set(SystemSet::on_update(AssetLoad).with_system(spawn_projectile_countdown))
-            .add_system_set(SystemSet::on_update(AssetLoad).with_system(move_projectiles))
-            .add_system_set(SystemSet::on_update(AssetLoad).with_system(despawn_on_end));
+
+        app.add_system_set(SystemSet::on_enter(AssetLoad).with_system(setup_projectile_parent))
+            .add_system_set(SystemSet::on_update(Playing).with_system(enemy_shoot_projectile))
+            .add_system_set(SystemSet::on_update(Playing).with_system(move_projectiles))
+            .add_system_set(SystemSet::on_update(Playing).with_system(despawn_timer));
     }
 }

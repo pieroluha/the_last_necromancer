@@ -1,9 +1,10 @@
+use crate::enemy::EnemyType;
 use crate::prelude::*;
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 use std::time::Duration;
 
 #[derive(AssetCollection)]
-pub struct ImageAssets {
+pub struct ImageHandles {
     #[asset(path = "icon.png")]
     pub icon: Handle<Image>,
 
@@ -26,7 +27,31 @@ pub struct ImageAssets {
 pub struct AnimationHandles {
     pub fireball: Handle<SpriteSheetAnimation>,
     pub idle_player: Handle<SpriteSheetAnimation>,
-    pub idle_enemy: Handle<SpriteSheetAnimation>,
+    pub idle_mage_f: Handle<SpriteSheetAnimation>,
+    pub idle_mage_m: Handle<SpriteSheetAnimation>,
+    pub idle_elf_f: Handle<SpriteSheetAnimation>,
+    pub idle_elf_m: Handle<SpriteSheetAnimation>,
+}
+
+impl AnimationHandles {
+    pub fn enemy_sprite(&self, enemy_type: EnemyType) -> &Handle<SpriteSheetAnimation> {
+        match enemy_type {
+            EnemyType::Mage(is_alt) => {
+                if !is_alt {
+                    &self.idle_mage_f
+                } else {
+                    &self.idle_mage_m
+                }
+            }
+            EnemyType::Archer(is_alt) => {
+                if !is_alt {
+                    &self.idle_elf_f
+                } else {
+                    &self.idle_elf_m
+                }
+            }
+        }
+    }
 }
 
 fn setup_animation_handles(
@@ -43,15 +68,33 @@ fn setup_animation_handles(
         Duration::from_millis(100),
     ));
 
-    let idle_enemy = animations.add(SpriteSheetAnimation::from_range(
+    let idle_mage_f = animations.add(SpriteSheetAnimation::from_range(
         0..=3,
+        Duration::from_millis(100),
+    ));
+
+    let idle_mage_m = animations.add(SpriteSheetAnimation::from_range(
+        4..=7,
+        Duration::from_millis(100),
+    ));
+
+    let idle_elf_f = animations.add(SpriteSheetAnimation::from_range(
+        8..=11,
+        Duration::from_millis(100),
+    ));
+
+    let idle_elf_m = animations.add(SpriteSheetAnimation::from_range(
+        12..=15,
         Duration::from_millis(100),
     ));
 
     commands.insert_resource(AnimationHandles {
         fireball,
         idle_player,
-        idle_enemy,
+        idle_mage_f,
+        idle_mage_m,
+        idle_elf_f,
+        idle_elf_m,
     });
 }
 
@@ -61,7 +104,7 @@ impl Plugin for AssetLoaderPlugin {
         app.add_system_set(SystemSet::on_enter(AssetLoad).with_system(setup_animation_handles));
         AssetLoader::new(AssetLoad)
             .continue_to_state(Playing)
-            .with_collection::<ImageAssets>()
+            .with_collection::<ImageHandles>()
             .build(app);
     }
 }

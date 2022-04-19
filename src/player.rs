@@ -3,15 +3,19 @@ use crate::prelude::*;
 #[derive(Component)]
 pub struct Player;
 
-fn spawn_player(image_assets: Res<ImageAssets>, animation_handles: Res<AnimationHandles>, mut commands: Commands) {
-
+fn spawn_player(
+    image_handles: Res<ImageHandles>,
+    animation_handles: Res<AnimationHandles>,
+    mut commands: Commands,
+) {
     commands
         .spawn_bundle(SpriteSheetBundle {
-            texture_atlas: image_assets.player.clone(),
+            texture_atlas: image_handles.player.clone(),
             transform: Transform::from_xyz(ARENA_OFFSET, ARENA_OFFSET, 2.0),
             ..default()
         })
         .insert(Player)
+        .insert(Name::new("Player"))
         .insert(animation_handles.idle_player.clone())
         .insert(Play);
 }
