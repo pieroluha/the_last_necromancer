@@ -15,6 +15,10 @@ pub struct ImageHandles {
     #[asset(path = "images/fireball.png")]
     pub fireball: Handle<TextureAtlas>,
 
+    #[asset(texture_atlas(tile_size_x = 13.0, tile_size_y = 16.0, columns = 10, rows = 1,))]
+    #[asset(path = "images/arrow.png")]
+    pub arrow: Handle<TextureAtlas>,
+
     #[asset(texture_atlas(tile_size_x = 32.0, tile_size_y = 32.0, columns = 4, rows = 1,))]
     #[asset(path = "images/player.png")]
     pub player: Handle<TextureAtlas>,
@@ -22,15 +26,29 @@ pub struct ImageHandles {
     #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 28.0, columns = 4, rows = 4,))]
     #[asset(path = "images/enemies.png")]
     pub enemies: Handle<TextureAtlas>,
+
+    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 24.0, columns = 4, rows = 2,))]
+    #[asset(path = "images/chortle.png")]
+    pub demon: Handle<TextureAtlas>,
+
+    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, columns = 4, rows = 2,))]
+    #[asset(path = "images/skelly.png")]
+    pub skeleton: Handle<TextureAtlas>,
 }
 
 pub struct AnimationHandles {
     pub fireball: Handle<SpriteSheetAnimation>,
+    pub arrow_fly: Handle<SpriteSheetAnimation>,
+    pub arrow_break: Handle<SpriteSheetAnimation>,
     pub idle_player: Handle<SpriteSheetAnimation>,
     pub idle_mage_f: Handle<SpriteSheetAnimation>,
     pub idle_mage_m: Handle<SpriteSheetAnimation>,
     pub idle_elf_f: Handle<SpriteSheetAnimation>,
     pub idle_elf_m: Handle<SpriteSheetAnimation>,
+    pub demon_idle: Handle<SpriteSheetAnimation>,
+    pub demon_run: Handle<SpriteSheetAnimation>,
+    pub skeleton_idle: Handle<SpriteSheetAnimation>,
+    pub skeleton_run: Handle<SpriteSheetAnimation>,
 }
 
 impl AnimationHandles {
@@ -88,13 +106,49 @@ fn setup_animation_handles(
         Duration::from_millis(100),
     ));
 
+    let arrow_fly = animations.add(SpriteSheetAnimation::from_range(
+        0..=5,
+        Duration::from_millis(100),
+    ));
+
+    let arrow_break = animations.add(SpriteSheetAnimation::from_range(
+        6..=9,
+        Duration::from_millis(100),
+    ));
+
+    let demon_idle = animations.add(SpriteSheetAnimation::from_range(
+        0..=3,
+        Duration::from_millis(100),
+    ));
+
+    let demon_run = animations.add(SpriteSheetAnimation::from_range(
+        4..=7,
+        Duration::from_millis(100),
+    ));
+
+    let skeleton_idle = animations.add(SpriteSheetAnimation::from_range(
+        0..=3,
+        Duration::from_millis(100),
+    ));
+
+    let skeleton_run = animations.add(SpriteSheetAnimation::from_range(
+        4..=7,
+        Duration::from_millis(100),
+    ));
+
     commands.insert_resource(AnimationHandles {
         fireball,
+        arrow_fly,
+        arrow_break,
         idle_player,
         idle_mage_f,
         idle_mage_m,
         idle_elf_f,
         idle_elf_m,
+        demon_idle,
+        demon_run,
+        skeleton_idle,
+        skeleton_run,
     });
 }
 
