@@ -54,6 +54,7 @@ fn spawn_initial_enemies(
         let child = commands
             .spawn_bundle(mage)
             .insert(Enemy(EnemyType::Mage(is_alt)))
+            .insert(Life(1))
             .insert(
                 animation_handles
                     .enemy_sprite(EnemyType::Mage(is_alt))

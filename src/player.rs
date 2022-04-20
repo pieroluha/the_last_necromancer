@@ -3,9 +3,6 @@ use crate::prelude::*;
 #[derive(Component)]
 pub struct Player;
 
-#[derive(Component)]
-pub struct Minion;
-
 fn spawn_player(
     image_handles: Res<ImageHandles>,
     animation_handles: Res<AnimationHandles>,
@@ -19,6 +16,8 @@ fn spawn_player(
         })
         .insert(Player)
         .insert(Name::new("Player"))
+        .insert(Life(20))
+        .insert(Mana(20))
         .insert(animation_handles.idle_player.clone())
         .insert(Play)
         .insert(RigidBody::Sensor)
@@ -31,6 +30,8 @@ fn spawn_player(
             EntityLayer::Projectile,
         ));
 }
+
+fn player_shield() {}
 
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {

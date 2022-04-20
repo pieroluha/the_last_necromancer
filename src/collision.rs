@@ -28,7 +28,14 @@ pub const PROJECTILE_MASK: [EntityLayer; 2] = [EntityLayer::Player, EntityLayer:
 //    }
 //}
 
-fn projectile_collisions(mut commands: Commands, mut collisions: EventReader<CollisionEvent>) {
+#[derive(Deref, DerefMut)]
+struct HitEvent(u32);
+
+fn projectile_collisions(
+    mut commands: Commands,
+    mut hit_writer: EventWriter<HitEvent>,
+    mut collisions: EventReader<CollisionEvent>,
+) {
     collisions
         .iter()
         .filter(|e| e.is_started())
@@ -36,15 +43,40 @@ fn projectile_collisions(mut commands: Commands, mut collisions: EventReader<Col
             let (e1, e2) = collision.rigid_body_entities();
             let (l1, l2) = collision.collision_layers();
             if is_target(l1) && is_projectile(l2) {
-                Some(e2)
+                Some((e2, e1))
             } else if is_target(l2) && is_projectile(l1) {
-                Some(e1)
+                Some((e1, e2))
             } else {
                 None
             }
         })
-        .for_each(|projectile| commands.entity(projectile).despawn_recursive());
+        .for_each(|(projectile, entity)| {
+            commands.entity(projectile).despawn_recursive();
+            hit_writer.send(HitEvent(entity.id()));
+        });
+    //.for_each(|projectile| commands.entity(projectile).despawn_recursive());
 }
+
+fn player_collision(
+    mut commands: Commands,
+    mut hits: EventReader<HitEvent>,
+    mut query_player: Query<(&mut Life, Entity), With<Player>>,
+) {
+    for hit in hits.iter() {
+        let (mut player_life, player) = query_player.single_mut();
+        if hit.0 != player.id() {
+            return;
+        }
+        player_life.0 = player_life.saturating_sub(1);
+    }
+}
+
+//fn minion_collision(
+//    mut commands: Commands,
+//    mut hits: EventReader<HitEvent>,
+//    mut query_player: Query<(&mut Life, Entity), With<Minion>>,
+//) {
+//}
 
 fn is_target(layers: CollisionLayers) -> bool {
     layers.contains_group(EntityLayer::Minion)
@@ -62,6 +94,8 @@ pub struct CollisionPlugin;
 impl Plugin for CollisionPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(PhysicsPlugin::default())
-            .add_system_set(SystemSet::on_update(Playing).with_system(projectile_collisions));
+            .add_event::<HitEvent>()
+            .add_system_set(SystemSet::on_update(Playing).with_system(projectile_collisions))
+            .add_system_set(SystemSet::on_update(Playing).with_system(player_collision));
     }
 }

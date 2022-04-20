@@ -8,6 +8,7 @@ mod debug_panel;
 mod enemy;
 mod helper;
 mod input;
+mod minion;
 mod player;
 mod projectiles;
 mod prelude {
@@ -18,6 +19,7 @@ mod prelude {
     pub use crate::enemy::*;
     pub use crate::helper::*;
     pub use crate::input::*;
+    pub use crate::minion::*;
     pub use crate::player::*;
     pub use crate::projectiles::*;
     pub use benimator::*;
@@ -79,6 +81,7 @@ fn main() {
         .add_plugin(InputPlugin)
         .add_plugin(ArenaPlugin)
         .add_plugin(PlayerPlugin)
+        .add_plugin(MinionPlugin)
         .add_plugin(EnemyPlugin)
         .add_plugin(CollisionPlugin)
         .add_plugin(ProjectilesPlugin);

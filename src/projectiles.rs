@@ -29,8 +29,8 @@ fn setup_projectile_parent(mut commands: Commands) {
         .insert(Name::new("ProjectileNode"));
 }
 
-pub const FIREBALL_SPEED: f32 = 200.0;
-pub const MULTIPLIER: f32 = 3.0;
+pub const PROJECTILE_BASE_SPEED: f32 = 100.0;
+pub const MULTIPLIER: f32 = 2.0;
 
 fn enemy_shoot_projectile(
     time: Res<Time>,
@@ -46,16 +46,19 @@ fn enemy_shoot_projectile(
         if timer.just_finished() {
             let parent_node = query_node.single();
 
-            let (projectile_type, image_handle, animation_handle) = match enemy_type.0 {
+            let (projectile_type, image_handle, animation_handle, sprite_size) = match enemy_type.0
+            {
                 EnemyType::Mage(true) | EnemyType::Mage(false) => (
                     ProjectileType::Fireball,
                     image_handles.fireball.clone(),
                     animation_handles.fireball.clone(),
+                    Vec2::new(16.0, 16.0),
                 ),
                 EnemyType::Archer(true) | EnemyType::Archer(false) => (
                     ProjectileType::Fireball,
-                    image_handles.fireball.clone(),
-                    animation_handles.fireball.clone(),
+                    image_handles.arrow.clone(),
+                    animation_handles.arrow_fly.clone(),
+                    Vec2::new(13.0, 16.0),
                 ),
             };
 
@@ -63,7 +66,7 @@ fn enemy_shoot_projectile(
                 .spawn_bundle(SpriteSheetBundle {
                     texture_atlas: image_handle,
                     sprite: TextureAtlasSprite {
-                        custom_size: Some(Vec2::new(16.0, 16.0)),
+                        custom_size: Some(sprite_size),
                         ..default()
                     },
                     transform: *enemy,
@@ -74,7 +77,7 @@ fn enemy_shoot_projectile(
                 .insert(Velocity::from_linear(look_at_player(&enemy.translation)))
                 .insert(RigidBody::KinematicPositionBased)
                 .insert(CollisionShape::Cuboid {
-                    half_extends: Vec2::splat(16.0 / 2.0).extend(0.0),
+                    half_extends: (sprite_size / 2.0).extend(0.0),
                     border_radius: None,
                 })
                 .insert(
@@ -82,7 +85,7 @@ fn enemy_shoot_projectile(
                         .with_group(EntityLayer::Projectile)
                         .with_masks(&PROJECTILE_MASK),
                 )
-                .insert(Speed(FIREBALL_SPEED))
+                .insert(Speed(PROJECTILE_BASE_SPEED))
                 .insert(Projectile(projectile_type))
                 //.insert(DespawnTimer(Timer::from_seconds(5.0, false)))
                 .id();
