@@ -3,6 +3,9 @@ use crate::prelude::*;
 #[derive(Component)]
 pub struct Player;
 
+#[derive(Component)]
+pub struct Minion;
+
 fn spawn_player(
     image_handles: Res<ImageHandles>,
     animation_handles: Res<AnimationHandles>,
@@ -17,7 +20,16 @@ fn spawn_player(
         .insert(Player)
         .insert(Name::new("Player"))
         .insert(animation_handles.idle_player.clone())
-        .insert(Play);
+        .insert(Play)
+        .insert(RigidBody::Sensor)
+        .insert(CollisionShape::Cuboid {
+            half_extends: Vec2::splat(32.0 / 2.0).extend(0.0),
+            border_radius: None,
+        })
+        .insert(CollisionLayers::new(
+            EntityLayer::Player,
+            EntityLayer::Projectile,
+        ));
 }
 
 pub struct PlayerPlugin;

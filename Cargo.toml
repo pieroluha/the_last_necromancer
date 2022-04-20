@@ -30,6 +30,7 @@ default = [
     "bevy_kira_audio/ogg",
     "bevy_hanabi/2d",
     "bevy_asset_loader/2d",
+    "heron/2d",
 ]
 dev = ["bevy/dynamic", "bevy-inspector-egui"]
 
@@ -57,5 +58,5 @@ benimator = "3.0.0" # Sprite animator plugin
 leafwing-input-manager = "0.3.0"
 petitset = "0.2.1"
 fastrand = "1.7.0"
-parry2d = "0.8.0"
+heron = "3.0.0"
 #bevy_framepace = "0.3.0"

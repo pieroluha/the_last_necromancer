@@ -20,7 +20,7 @@ fn add_ui_camera(mut commands: Commands) {
 fn edit_camera_scaling(mut query_camera: Query<(&mut OrthographicProjection, &mut Transform), With<MainCamera>>) {
     let (mut camera, mut transform) = query_camera.single_mut();
     camera.scaling_mode = ScalingMode::FixedVertical;
-    camera.scale = 200.0;
+    camera.scale = DEFAULT_WIN_HEIGHT / 4.0;
     transform.translation.x = ARENA_OFFSET;
     transform.translation.y = ARENA_OFFSET;
 }
