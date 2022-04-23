@@ -15,19 +15,6 @@ pub enum EntityLayer {
 
 pub const PROJECTILE_MASK: [EntityLayer; 2] = [EntityLayer::Player, EntityLayer::Minion];
 
-//fn test_collision(mut collisions: EventReader<CollisionEvent>) {
-//    for collision in collisions.iter() {
-//        match collision {
-//            CollisionEvent::Started(e1, e2) => {
-//                println!("{:?} and {:?} collided.", e1, e2);
-//            }
-//            CollisionEvent::Stopped(e1, e2) => {
-//                println!("{:?} and {:?} stopped colliding.", e1, e2);
-//            }
-//        }
-//    }
-//}
-
 #[derive(Deref, DerefMut)]
 struct HitEvent(u32);
 
@@ -54,7 +41,6 @@ fn projectile_collisions(
             commands.entity(projectile).despawn_recursive();
             hit_writer.send(HitEvent(entity.id()));
         });
-    //.for_each(|projectile| commands.entity(projectile).despawn_recursive());
 }
 
 fn player_collision(
@@ -71,12 +57,20 @@ fn player_collision(
     }
 }
 
-//fn minion_collision(
-//    mut commands: Commands,
-//    mut hits: EventReader<HitEvent>,
-//    mut query_player: Query<(&mut Life, Entity), With<Minion>>,
-//) {
-//}
+fn minion_collision(
+    mut commands: Commands,
+    mut hits: EventReader<HitEvent>,
+    mut query_minion: Query<(&mut Life, Entity), With<Minion>>,
+) {
+    for hit in hits.iter() {
+        for (mut minion_life, minion) in query_minion.iter_mut() {
+            if hit.0 != minion.id() {
+                continue;
+            }
+            minion_life.0 = minion_life.saturating_sub(1);
+        }
+    }
+}
 
 fn is_target(layers: CollisionLayers) -> bool {
     layers.contains_group(EntityLayer::Minion)
@@ -90,12 +84,40 @@ fn is_projectile(layers: CollisionLayers) -> bool {
         && !layers.contains_group(EntityLayer::Player)
 }
 
+// For the selection box collision
+#[derive(Component)]
+pub struct RectAABB {
+    pub pos: Vec2,
+    pub size: Vec2,
+}
+
+impl Default for RectAABB {
+    fn default() -> Self {
+        Self {
+            pos: Vec2::ZERO,
+            size: Vec2::ZERO,
+        }
+    }
+}
+
+impl RectAABB {
+    pub fn collision_check(&self, other: &RectAABB) -> bool {
+        let a = self.pos;
+        let asi = self.size;
+        let b = other.pos;
+        let bsi = other.size;
+
+        (a.x - b.x).abs() * 2.0 < (asi.x + bsi.x) && (a.y - b.y).abs() * 2.0 < (asi.y + bsi.y)
+    }
+}
+
 pub struct CollisionPlugin;
 impl Plugin for CollisionPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(PhysicsPlugin::default())
             .add_event::<HitEvent>()
             .add_system_set(SystemSet::on_update(Playing).with_system(projectile_collisions))
+            .add_system_set(SystemSet::on_update(Playing).with_system(minion_collision))
             .add_system_set(SystemSet::on_update(Playing).with_system(player_collision));
     }
 }

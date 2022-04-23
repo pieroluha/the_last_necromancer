@@ -28,9 +28,9 @@ default = [
     "bevy/png",
     "bevy/x11",
     "bevy_kira_audio/ogg",
-    "bevy_hanabi/2d",
     "bevy_asset_loader/2d",
     "heron/2d",
+    #"bevy_hanabi/2d",
 ]
 dev = ["bevy/dynamic", "bevy-inspector-egui"]
 
@@ -51,12 +51,11 @@ bevy = { version = "0.7.0", default-features = false }
 bevy-inspector-egui = { version = "0.10.0", optional = true }
 bevy_asset_loader = "0.10.0"
 bevy_kira_audio = "0.9.0"
-bevy_prototype_debug_lines = "0.6.1"
 bevy_tweening = "0.4.0"
-bevy_hanabi = "0.2.0" # Particle plugin
-benimator = "3.0.0" # Sprite animator plugin
-leafwing-input-manager = "0.3.0"
-petitset = "0.2.1"
+heron = "3.0.0"                     # Physics plugin
+benimator = "3.0.0"                 # Sprite animator plugin
+leafwing-input-manager = "0.3.0"    # Input manager plugin
 fastrand = "1.7.0"
-heron = "3.0.0"
-#bevy_framepace = "0.3.0"
+pathfinding = "3.0.12"
+#bevy_hanabi = "0.2.0"               # Particle plugin
+#bevy_framepace = "0.4.0"

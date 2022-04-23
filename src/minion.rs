@@ -64,8 +64,18 @@ fn spawn_initial_minions(
                 EntityLayer::Minion,
                 EntityLayer::Projectile,
             ))
+            .insert(RectAABB {
+                pos: Vec2::ZERO,
+                size: Vec2::new(16.0, 16.0),
+            })
             .id();
         commands.entity(parent_node).add_child(child);
+    }
+}
+
+fn update_rect_aabb(mut query_minion: Query<(&Transform, &mut RectAABB), With<Minion>>) {
+    for (transform, mut rect) in query_minion.iter_mut() {
+        rect.pos = transform.translation.truncate();
     }
 }
 
@@ -73,6 +83,7 @@ pub struct MinionPlugin;
 impl Plugin for MinionPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(SystemSet::on_enter(AssetLoad).with_system(spawn_minion_parent))
-            .add_system_set(SystemSet::on_enter(Playing).with_system(spawn_initial_minions));
+            .add_system_set(SystemSet::on_enter(Playing).with_system(spawn_initial_minions))
+            .add_system_set(SystemSet::on_update(Playing).with_system(update_rect_aabb));
     }
 }
