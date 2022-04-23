@@ -36,42 +36,6 @@ fn debug_fps_information(
     }
 }
 
-#[derive(Default)]
-struct CursorPosition {
-    pos: Vec2,
-}
-
-impl CursorPosition {
-    fn set_pos(&mut self, pos: Vec2) {
-        self.pos = pos;
-    }
-}
-
-fn set_cursor_pos(
-    windows: Res<Windows>,
-    query_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
-    mut cursor_position: ResMut<CursorPosition>,
-) {
-    let (camera, camera_transform) = query_camera.single();
-
-    let window = windows.get_primary().unwrap();
-
-    // check if the cursor is inside the window and get its position
-    if let Some(screen_pos) = window.cursor_position() {
-        // get the size of the window
-        let window_size = Vec2::new(window.width() as f32, window.height() as f32);
-        // convert screen position [0..resolution] to ndc [-1..1] (gpu coordinates)
-        let ndc = (screen_pos / window_size) * 2.0 - Vec2::ONE;
-        // matrix for undoing the projection and camera transform
-        let ndc_to_world = camera_transform.compute_matrix() * camera.projection_matrix.inverse();
-        // use it to convert ndc to world-space coordinates
-        let world_pos = ndc_to_world.project_point3(ndc.extend(-1.0));
-        // reduce it to a 2D value
-        let world_pos: Vec2 = world_pos.truncate();
-        // sets the cursor positions into the resource
-        cursor_position.set_pos(world_pos);
-    }
-}
 
 pub struct DebugPanelPlugin;
 impl Plugin for DebugPanelPlugin {
@@ -80,7 +44,6 @@ impl Plugin for DebugPanelPlugin {
             .add_plugin(WorldInspectorPlugin::new())
             .add_plugin(FrameTimeDiagnosticsPlugin)
             .add_plugin(InspectorPlugin::<DebugPanel>::new())
-            .add_system_set(SystemSet::on_update(Playing).with_system(set_cursor_pos))
             .add_system_set(SystemSet::on_update(Playing).with_system(debug_fps_information));
     }
 }

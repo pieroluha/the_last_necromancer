@@ -4,6 +4,12 @@ use bevy_asset_loader::{AssetCollection, AssetLoader};
 use std::time::Duration;
 
 #[derive(AssetCollection)]
+pub struct FontHandles {
+    #[asset(path = "fonts/DungeonFont.ttf")]
+    pub dungeon_font: Handle<Font>,
+}
+
+#[derive(AssetCollection)]
 pub struct ImageHandles {
     #[asset(path = "icon.png")]
     pub icon: Handle<Image>,
@@ -159,6 +165,7 @@ impl Plugin for AssetLoaderPlugin {
         AssetLoader::new(AssetLoad)
             .continue_to_state(Playing)
             .with_collection::<ImageHandles>()
+            .with_collection::<FontHandles>()
             .build(app);
     }
 }

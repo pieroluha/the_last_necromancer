@@ -9,8 +9,10 @@ mod enemy;
 mod helper;
 mod input;
 mod minion;
+mod pathfinding;
 mod player;
 mod projectiles;
+mod selection_box;
 mod prelude {
     pub use crate::arena::*;
     pub use crate::asset_loader::*;
@@ -20,8 +22,10 @@ mod prelude {
     pub use crate::helper::*;
     pub use crate::input::*;
     pub use crate::minion::*;
+    pub use crate::pathfinding::*;
     pub use crate::player::*;
     pub use crate::projectiles::*;
+    pub use crate::selection_box::*;
     pub use benimator::*;
     pub use bevy::prelude::*;
 
@@ -84,6 +88,8 @@ fn main() {
         .add_plugin(MinionPlugin)
         .add_plugin(EnemyPlugin)
         .add_plugin(CollisionPlugin)
+        .add_plugin(PathfindingPlugin)
+        .add_plugin(SelectionBoxPlugin)
         .add_plugin(ProjectilesPlugin);
 
     #[cfg(feature = "dev")]
