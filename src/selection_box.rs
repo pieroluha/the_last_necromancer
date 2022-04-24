@@ -83,7 +83,6 @@ fn rect_intersection(
 
     for select_box in read_select_event.iter() {
         for (rect_minion, minion) in query_minion.iter() {
-            println!("Wambo {}", select_box.0.collision_check(rect_minion));
             if select_box.0.collision_check(rect_minion) {
                 selected_entities.0.push(minion);
                 commands.entity(minion).insert(SelectedUnit::default());

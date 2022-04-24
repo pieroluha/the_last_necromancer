@@ -55,9 +55,6 @@ mod prelude {
 
     pub const DEFAULT_WIN_WIDTH: f32 = 800.0;
     pub const DEFAULT_WIN_HEIGHT: f32 = 800.0;
-    pub const ARENA_SIDE: f32 = 400.0;
-    pub const ARENA_OFFSET: f32 = ARENA_SIDE / 2.0;
-    pub const NORMAL_SPRITE_SIZE: f32 = 16.0;
     pub const BACKGROUND: Color = Color::rgb(34.0 / 255.0, 34.0 / 255.0, 34.0 / 255.0);
 }
 

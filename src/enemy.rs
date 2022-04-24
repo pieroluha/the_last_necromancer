@@ -26,7 +26,7 @@ fn spawn_enemy_parent(mut commands: Commands) {
 // Below => -y or y: -0 | x can be 0 to 400
 // Left => -x or x: -0 | y can be 0 to 400
 // Right => +x or x: +400 | y can be 0 to 400
-const POS_CAP: i32 = ARENA_SIDE as i32 + 100;
+const POS_CAP: i32 = ARENA_WORLD_SIZE as i32 + 100;
 const NEG_CAP: i32 = -100;
 fn spawn_initial_enemies(
     image_handles: Res<ImageHandles>,
@@ -68,7 +68,7 @@ fn spawn_initial_enemies(
 }
 
 fn random_pos(i: u32) -> (f32, f32) {
-    let arena_side = ARENA_SIDE as i32;
+    let arena_side = ARENA_WORLD_SIZE as i32;
     let (x, y) = if i <= 5 {
         // Above
         (
