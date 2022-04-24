@@ -44,30 +44,29 @@ fn projectile_collisions(
 }
 
 fn player_collision(
-    mut commands: Commands,
     mut hits: EventReader<HitEvent>,
-    mut query_player: Query<(&mut Life, Entity), With<Player>>,
+    mut query_entities: Query<(&mut Life, Entity), (With<Player>, Without<Minion>)>,
 ) {
     for hit in hits.iter() {
-        let (mut player_life, player) = query_player.single_mut();
-        if hit.0 != player.id() {
-            return;
+        for (mut life, entity) in query_entities.iter_mut() {
+            if hit.0 != entity.id() {
+                continue;
+            }
+            life.0 = life.saturating_sub(1);
         }
-        player_life.0 = player_life.saturating_sub(1);
     }
 }
 
 fn minion_collision(
-    mut commands: Commands,
     mut hits: EventReader<HitEvent>,
-    mut query_minion: Query<(&mut Life, Entity), With<Minion>>,
+    mut query_entities: Query<(&mut Life, Entity, &Minion), (With<Minion>, Without<Player>)>,
 ) {
     for hit in hits.iter() {
-        for (mut minion_life, minion) in query_minion.iter_mut() {
-            if hit.0 != minion.id() {
+        for (mut life, entity, minion_type) in query_entities.iter_mut() {
+            if hit.0 != entity.id() {
                 continue;
             }
-            minion_life.0 = minion_life.saturating_sub(1);
+            life.0 = life.saturating_sub(1);
         }
     }
 }
