@@ -1,10 +1,13 @@
 use bevy::prelude::*;
 
+#[cfg(feature = "dev")]
+mod debug_panel;
+
 mod arena;
 mod asset_loader;
 mod camera;
 mod collision;
-mod debug_panel;
+mod death;
 mod enemy;
 mod helper;
 mod input;
@@ -18,6 +21,7 @@ mod prelude {
     pub use crate::asset_loader::*;
     pub use crate::camera::*;
     pub use crate::collision::*;
+    pub use crate::death::*;
     pub use crate::enemy::*;
     pub use crate::helper::*;
     pub use crate::input::*;
@@ -37,6 +41,7 @@ mod prelude {
         AssetLoad,
         StartMenu,
         Playing,
+        GameOver,
         Pause,
         Exit,
     }
@@ -87,6 +92,7 @@ fn main() {
         .add_plugin(CollisionPlugin)
         .add_plugin(PathfindingPlugin)
         .add_plugin(SelectionBoxPlugin)
+        .add_plugin(DeathPlugin)
         .add_plugin(ProjectilesPlugin);
 
     #[cfg(feature = "dev")]

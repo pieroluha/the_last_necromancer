@@ -29,7 +29,7 @@ fn setup_projectile_parent(mut commands: Commands) {
         .insert(Name::new("ProjectileNode"));
 }
 
-pub const PROJECTILE_BASE_SPEED: f32 = 100.0;
+pub const PROJECTILE_BASE_SPEED: f32 = 50.0;
 pub const MULTIPLIER: f32 = 2.0;
 
 fn enemy_shoot_projectile(

@@ -36,12 +36,10 @@ fn debug_fps_information(
     }
 }
 
-
 pub struct DebugPanelPlugin;
 impl Plugin for DebugPanelPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<CursorPosition>()
-            .add_plugin(WorldInspectorPlugin::new())
+        app.add_plugin(WorldInspectorPlugin::new())
             .add_plugin(FrameTimeDiagnosticsPlugin)
             .add_plugin(InspectorPlugin::<DebugPanel>::new())
             .add_system_set(SystemSet::on_update(Playing).with_system(debug_fps_information));

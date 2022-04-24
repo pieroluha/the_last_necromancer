@@ -6,6 +6,8 @@ struct SelectionBox;
 #[derive(Default)]
 pub struct SelectedEntities(pub Vec<Entity>);
 
+struct SelectEvent(RectAABB);
+
 const TRANS_GREEN: Color = Color::rgba(104.0 / 255.0, 110.0 / 255.0, 70.0 / 255.0, 50.0 / 255.0);
 
 fn initialize_selection_box(mut commands: Commands) {
@@ -18,11 +20,8 @@ fn initialize_selection_box(mut commands: Commands) {
             ..default()
         })
         .insert(Name::new("SelectionBox"))
-        .insert(RectAABB::default())
         .insert(SelectionBox);
 }
-
-struct SelectEvent(RectAABB);
 
 fn update_selection_box(
     cursor_position: Res<CursorPosition>,
@@ -36,7 +35,7 @@ fn update_selection_box(
     mut jimbo: Local<bool>,
     mut commands: Commands,
 ) {
-    let mut action = query_action.single();
+    let action = query_action.single();
     let mut transform = query_selection_box.single_mut();
 
     if action.released(LeftClick) {
@@ -69,18 +68,15 @@ fn update_selection_box(
     *pos = lower_left + (*size * 0.5);
 
     transform.scale = size.extend(0.0);
-    transform.translation = pos.extend(2.0);
+    transform.translation = pos.extend(5.0);
 }
 
 fn rect_intersection(
-    query_minion: Query<(&RectAABB, Entity), (With<Minion>, Without<SelectionBox>)>,
-    mut query_selection_box: Query<&mut RectAABB, (With<SelectionBox>, Without<Minion>)>,
+    query_minion: Query<(&RectAABB, Entity), With<Minion>>,
     mut selected_entities: ResMut<SelectedEntities>,
     mut read_select_event: EventReader<SelectEvent>,
     mut commands: Commands,
 ) {
-    let mut rect_box = query_selection_box.single_mut();
-
     for select_box in read_select_event.iter() {
         for (rect_minion, minion) in query_minion.iter() {
             if select_box.0.collision_check(rect_minion) {

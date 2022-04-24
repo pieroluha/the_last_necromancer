@@ -22,7 +22,7 @@ fn edit_camera_scaling(
 ) {
     let (mut camera, mut transform) = query_camera.single_mut();
     camera.scaling_mode = ScalingMode::FixedVertical;
-    camera.scale = DEFAULT_WIN_HEIGHT / 4.0;
+    camera.scale = 200.0;
     transform.translation.x = ARENA_OFFSET;
     transform.translation.y = ARENA_OFFSET;
 }
@@ -37,15 +37,15 @@ impl CursorPosition {
         self.pos = pos;
     }
 
-    pub fn offset_pos(&self) -> Vec2 {
-        let multiple = CELL_SIZE as i32;
-        let x = self.pos.x as i32;
-        let y = self.pos.y as i32;
-        let x = ((x + multiple - 1) & -multiple) as f32;
-        let y = ((y + multiple - 1) & -multiple) as f32;
+    //pub fn offset_pos(&self) -> Vec2 {
+    //    let multiple = CELL_SIZE as i32;
+    //    let x = self.pos.x as i32;
+    //    let y = self.pos.y as i32;
+    //    let x = ((x + multiple - 1) & -multiple) as f32;
+    //    let y = ((y + multiple - 1) & -multiple) as f32;
 
-        Vec2::new(x, y)
-    }
+    //    Vec2::new(x, y)
+    //}
 
     pub fn offset_pos_integer(&self) -> IVec2 {
         let multiple = CELL_SIZE as i32;
@@ -88,7 +88,8 @@ fn set_cursor_pos(
 pub struct MyCameraPlugin;
 impl Plugin for MyCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(AssetLoad).with_system(add_2d_camera))
+        app.init_resource::<CursorPosition>()
+            .add_system_set(SystemSet::on_enter(AssetLoad).with_system(add_2d_camera))
             .add_system_set(SystemSet::on_enter(AssetLoad).with_system(add_ui_camera))
             .add_system_set(SystemSet::on_update(Playing).with_system(set_cursor_pos))
             .add_system_set(SystemSet::on_enter(Playing).with_system(edit_camera_scaling));

@@ -14,8 +14,11 @@ pub struct ImageHandles {
     #[asset(path = "icon.png")]
     pub icon: Handle<Image>,
 
-    #[asset(path = "images/player_platform400x400.png")]
-    pub platform: Handle<Image>,
+    #[asset(path = "images/arena.png")]
+    pub arena: Handle<Image>,
+
+    #[asset(path = "images/arena_shadow.png")]
+    pub arena_shadow: Handle<Image>,
 
     #[asset(texture_atlas(tile_size_x = 64.0, tile_size_y = 64.0, columns = 8, rows = 8,))]
     #[asset(path = "images/fireball.png")]
@@ -129,7 +132,7 @@ fn setup_animation_handles(
 
     let demon_run = animations.add(SpriteSheetAnimation::from_range(
         4..=7,
-        Duration::from_millis(100),
+        Duration::from_millis(200),
     ));
 
     let skeleton_idle = animations.add(SpriteSheetAnimation::from_range(
