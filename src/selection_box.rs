@@ -1,4 +1,6 @@
 use crate::prelude::*;
+use bevy::ecs::entity::Entities;
+use std::collections::VecDeque;
 
 #[derive(Component)]
 struct SelectionBox;
@@ -7,6 +9,42 @@ struct SelectionBox;
 pub struct SelectedEntities(pub Vec<Entity>);
 
 struct SelectEvent(RectAABB);
+
+#[derive(Component)]
+pub struct SelectedUnit {
+    pub path: VecDeque<Vec2>,
+    pub goal: Vec2,
+    pub is_selected: bool,
+}
+
+impl Default for SelectedUnit {
+    fn default() -> Self {
+        Self {
+            path: VecDeque::new(),
+            goal: Vec2::ZERO,
+            is_selected: false,
+        }
+    }
+}
+
+impl SelectedUnit {
+    pub fn set_result(&mut self, result: (Vec<Pos>, u32)) {
+        let mut path = VecDeque::new();
+
+        for pos in result.0.iter() {
+            path.push_back(Vec2::new((pos.0 << 4) as f32, (pos.1 << 4) as f32));
+        }
+
+        //println!("First Path {:#?}", path[0]);
+        //println!("Path List {:#?}", path);
+
+        self.path = path;
+    }
+
+    pub fn set_goal(&mut self, goal: &Pos) {
+        self.goal = Vec2::new((goal.0 << 4) as f32, (goal.1 << 4) as f32);
+    }
+}
 
 const TRANS_GREEN: Color = Color::rgba(104.0 / 255.0, 110.0 / 255.0, 70.0 / 255.0, 50.0 / 255.0);
 
@@ -26,6 +64,7 @@ fn initialize_selection_box(mut commands: Commands) {
 fn update_selection_box(
     cursor_position: Res<CursorPosition>,
     query_action: Query<&ActionState<Action>, With<ActionManager>>,
+    mut query_minions: Query<&mut SelectedUnit>,
     mut query_selection_box: Query<&mut Transform, With<SelectionBox>>,
     mut select_event: EventWriter<SelectEvent>,
     mut selected_entities: ResMut<SelectedEntities>,
@@ -33,7 +72,6 @@ fn update_selection_box(
     mut pos: Local<Vec2>,
     mut size: Local<Vec2>,
     mut jimbo: Local<bool>,
-    mut commands: Commands,
 ) {
     let action = query_action.single();
     let mut transform = query_selection_box.single_mut();
@@ -52,8 +90,10 @@ fn update_selection_box(
 
     if action.just_pressed(LeftClick) {
         *origin = cursor_position.pos;
-        for entity in selected_entities.0.iter() {
-            commands.entity(*entity).remove::<SelectedUnit>();
+        for mut minion in query_minions.iter_mut() {
+            if minion.is_selected == true {
+                minion.is_selected = false;
+            }
         }
         selected_entities.0.clear();
         *jimbo = true;
@@ -72,16 +112,15 @@ fn update_selection_box(
 }
 
 fn rect_intersection(
-    query_minion: Query<(&RectAABB, Entity), With<Minion>>,
+    mut query_minion: Query<(&RectAABB, Entity, &mut SelectedUnit), With<Minion>>,
     mut selected_entities: ResMut<SelectedEntities>,
     mut read_select_event: EventReader<SelectEvent>,
-    mut commands: Commands,
 ) {
     for select_box in read_select_event.iter() {
-        for (rect_minion, minion) in query_minion.iter() {
+        for (rect_minion, minion, mut selected) in query_minion.iter_mut() {
             if select_box.0.collision_check(rect_minion) {
                 selected_entities.0.push(minion);
-                commands.entity(minion).insert(SelectedUnit::default());
+                selected.is_selected = true;
             }
         }
     }

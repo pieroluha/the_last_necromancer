@@ -20,7 +20,7 @@ const DIRECTIONS: [(i32, i32); 8] = [
 
 // From the pathfinding crate
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-struct Pos(i32, i32);
+pub struct Pos(pub i32, pub i32);
 
 impl Pos {
     fn distance(&self, other: &Pos) -> u32 {
@@ -64,43 +64,6 @@ impl Pos {
         };
 
         Self(x, y)
-    }
-}
-
-#[derive(Component)]
-pub struct SelectedUnit {
-    path: VecDeque<Vec2>,
-    goal: Vec2,
-    finish: bool,
-}
-
-impl Default for SelectedUnit {
-    fn default() -> Self {
-        Self {
-            path: VecDeque::new(),
-            goal: Vec2::ZERO,
-            finish: false,
-        }
-    }
-}
-
-impl SelectedUnit {
-    fn set_result(&mut self, result: (Vec<Pos>, u32)) {
-        let mut path = VecDeque::new();
-
-        for pos in result.0.iter() {
-            path.push_back(Vec2::new((pos.0 << 4) as f32, (pos.1 << 4) as f32));
-        }
-
-        //println!("First Path {:#?}", path[0]);
-        //println!("Path List {:#?}", path);
-
-        self.path = path;
-        self.finish = false;
-    }
-
-    fn set_goal(&mut self, goal: &Pos) {
-        self.goal = Vec2::new((goal.0 << 4) as f32, (goal.1 << 4) as f32);
     }
 }
 
@@ -184,6 +147,10 @@ fn move_selected_units(
     mut query_selected_unit: Query<(&mut SelectedUnit, &mut Transform, &mut AnimState)>,
 ) {
     for (mut selected_unit, mut transform, mut minion_state) in query_selected_unit.iter_mut() {
+        if selected_unit.is_selected == false {
+            continue;
+        }
+
         if selected_unit.path.len() == 0 {
             if *minion_state == AnimState::Run {
                 *minion_state = AnimState::Idle;

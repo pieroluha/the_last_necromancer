@@ -72,6 +72,7 @@ fn spawn_initial_minions(
             .insert(Minion::Demon)
             .insert(AnimState::Idle)
             .insert(OldState::default())
+            .insert(SelectedUnit::default())
             .insert(animation_handles.demon_idle.clone())
             .insert(Play)
             .insert(Life(5))
