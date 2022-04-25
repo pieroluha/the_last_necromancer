@@ -43,6 +43,10 @@ pub struct ImageHandles {
     #[asset(path = "images/arrow.png")]
     pub arrow: Handle<TextureAtlas>,
 
+    #[asset(texture_atlas(tile_size_x = 32.0, tile_size_y = 32.0, columns = 8, rows = 4,))]
+    #[asset(path = "images/selected.png")]
+    pub selected: Handle<TextureAtlas>,
+
     #[asset(texture_atlas(tile_size_x = 32.0, tile_size_y = 32.0, columns = 4, rows = 1,))]
     #[asset(path = "images/player.png")]
     pub player: Handle<TextureAtlas>,

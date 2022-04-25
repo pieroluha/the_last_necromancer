@@ -18,10 +18,10 @@ impl Shield {
 
 impl Mana {
     pub fn add_mana(&mut self, val: f32) {
-        if self.0 < 200.0 {
+        if self.0 < 500.0 {
             self.0 += val;
         } else {
-            self.0 = 200.0
+            self.0 = 500.0
         }
     }
 
@@ -49,7 +49,7 @@ fn spawn_player(
         .insert(Player)
         .insert(Name::new("Player"))
         .insert(Life(20))
-        .insert(Mana(100.0))
+        .insert(Mana(500.0))
         .insert(animation_handles.idle_player.clone())
         .insert(Play)
         .insert(RigidBody::Sensor)
@@ -114,7 +114,7 @@ fn shield_state(
     }
 
     if shield.0 == false {
-        mana.add_mana(0.1);
+        mana.add_mana(0.2);
     } else {
         mana.subtract_mana(0.05);
     }

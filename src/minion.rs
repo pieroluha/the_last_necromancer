@@ -90,7 +90,7 @@ fn spawn_initial_minions(
             .insert(SelectedUnit::default())
             .insert(animation_handle)
             .insert(Play)
-            .insert(Life(5))
+            .insert(Life(15))
             .insert(RigidBody::KinematicPositionBased)
             .insert(CollisionShape::Cuboid {
                 half_extends: (size / 2.0).extend(0.0),

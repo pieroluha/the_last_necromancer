@@ -83,7 +83,7 @@ fn shield_collision(
         if hit.0 != shield.id() {
             continue;
         }
-        player_mana.subtract_mana(5.0);
+        player_mana.subtract_mana(2.5);
     }
 }
 
