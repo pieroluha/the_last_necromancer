@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum EnemyType {
     Mage(bool),
     Archer(bool),
@@ -8,6 +8,13 @@ pub enum EnemyType {
 
 #[derive(Component, Deref, DerefMut, PartialEq)]
 pub struct Enemy(pub EnemyType);
+
+#[derive(Default)]
+pub struct EnemyCount {
+    all: u8,
+    mages: u8,
+    archers: u8,
+}
 
 #[derive(Component)]
 pub struct EnemyNode;
@@ -22,12 +29,17 @@ fn spawn_enemy_parent(mut commands: Commands) {
 }
 
 // Boundaries
-// Above => +y or y: +400 | x can be 0 to 400
-// Below => -y or y: -0 | x can be 0 to 400
-// Left => -x or x: -0 | y can be 0 to 400
-// Right => +x or x: +400 | y can be 0 to 400
-const POS_CAP: i32 = ARENA_WORLD_SIZE as i32 + 100;
-const NEG_CAP: i32 = -100;
+// Upper left corner 80, 512
+// Upper right corner 512, 512
+// Lower left 80, 80
+// Lower right 512, 80
+// cap 80 512
+// 48 or 64 for upper area
+pub const INNER_MAP_MAX: i32 = 528;
+pub const INNER_MAP_MIN: i32 = 64;
+pub const POS_CAP: i32 = INNER_MAP_MAX + 32;
+pub const NEG_CAP: i32 = INNER_MAP_MIN - 32;
+const ENEMY_COUNT: u32 = 16;
 fn spawn_initial_enemies(
     image_handles: Res<ImageHandles>,
     animation_handles: Res<AnimationHandles>,
@@ -37,7 +49,7 @@ fn spawn_initial_enemies(
 ) {
     let enemy_node = query_enemy_node.single();
     let mut mage_batch = Vec::new();
-    for i in 0..20 {
+    for i in 0..ENEMY_COUNT {
         let (x, y) = random_pos(i);
         mage_batch.push(SpriteSheetBundle {
             texture_atlas: image_handles.enemies.clone(),
@@ -45,21 +57,18 @@ fn spawn_initial_enemies(
             ..default()
         })
     }
+    // function for enemy type and projectile tuple
 
     let min: u8 = 3 - wambo.0;
     let cap: u8 = 6 - wambo.0;
     for mage in mage_batch.into_iter() {
+        let enemy_type = get_enemy_type();
         let duration = fastrand::u8(min..cap) as f32;
-        let is_alt = fastrand::bool();
         let child = commands
             .spawn_bundle(mage)
-            .insert(Enemy(EnemyType::Mage(is_alt)))
+            .insert(Enemy(enemy_type.clone()))
             .insert(Life(1))
-            .insert(
-                animation_handles
-                    .enemy_sprite(EnemyType::Mage(is_alt))
-                    .clone(),
-            )
+            .insert(animation_handles.enemy_sprite(enemy_type).clone())
             .insert(Play)
             .insert(ShootProjectileTimer(Timer::from_seconds(duration, true)))
             .id();
@@ -67,24 +76,39 @@ fn spawn_initial_enemies(
     }
 }
 
+// if enemy.count.mage > 0 && enemy.count.archer > 0 {
+//      fastrand::bool()
+// } else if enemy.count.mage == 0 {
+//      archer
+// } else {
+//      mage
+// }
+
+// Create a random number from 0 to 15
 fn random_pos(i: u32) -> (f32, f32) {
     let arena_side = ARENA_WORLD_SIZE as i32;
-    let (x, y) = if i <= 5 {
+    let (x, y) = if i < 4 {
         // Above
         (
             fastrand::i32(0..arena_side),
-            fastrand::i32(arena_side + 1..POS_CAP),
+            fastrand::i32(INNER_MAP_MAX..POS_CAP),
         )
-    } else if i <= 10 && i > 5 {
+    } else if i < 8 && i >= 4 {
         // Below
-        (fastrand::i32(0..arena_side), fastrand::i32(NEG_CAP..-1))
-    } else if i <= 15 && i > 10 {
+        (
+            fastrand::i32(0..arena_side),
+            fastrand::i32(NEG_CAP..INNER_MAP_MIN),
+        )
+    } else if i < 12 && i >= 8 {
         // Left
-        (fastrand::i32(NEG_CAP..-1), fastrand::i32(0..arena_side))
+        (
+            fastrand::i32(NEG_CAP..INNER_MAP_MIN),
+            fastrand::i32(0..arena_side),
+        )
     } else {
         // Right
         (
-            fastrand::i32(arena_side + 1..POS_CAP),
+            fastrand::i32(INNER_MAP_MAX..POS_CAP),
             fastrand::i32(0..arena_side),
         )
     };
@@ -92,10 +116,82 @@ fn random_pos(i: u32) -> (f32, f32) {
     (x as f32, y as f32)
 }
 
+fn get_enemy_type() -> EnemyType {
+    if fastrand::bool() {
+        EnemyType::Mage(fastrand::bool())
+    } else {
+        EnemyType::Archer(fastrand::bool())
+    }
+}
+
+pub struct EnemyTeleportTimer {
+    pub main_timer: Timer,
+}
+
+impl Default for EnemyTeleportTimer {
+    fn default() -> Self {
+        Self {
+            main_timer: Timer::from_seconds(12.0, true),
+        }
+    }
+}
+
+pub struct TeleportEvent;
+fn teleport_timer(
+    time: Res<Time>,
+    mut countdown: ResMut<EnemyTeleportTimer>,
+    mut event_writer: EventWriter<TeleportEvent>,
+) {
+    countdown.main_timer.tick(time.delta());
+
+    if countdown.main_timer.just_finished() {
+        event_writer.send(TeleportEvent);
+    }
+}
+
+#[derive(Default)]
+struct ArenaDirection {
+    above: u8,
+    below: u8,
+    left: u8,
+    right: u8,
+}
+
+fn teleport_enemy(
+    mut event_reader: EventReader<TeleportEvent>,
+    mut query_minions: Query<&mut Transform, With<Enemy>>,
+) {
+    for _teleport_event in event_reader.iter() {
+        let mut arena_dir = ArenaDirection::default();
+        for mut minion in query_minions.iter_mut() {
+            let pos = if arena_dir.above < 4 {
+                arena_dir.above += 1;
+                random_pos(0)
+            } else if arena_dir.below < 4 {
+                arena_dir.below += 1;
+                random_pos(4)
+            } else if arena_dir.left < 4 {
+                arena_dir.left += 1;
+                random_pos(8)
+            } else {
+                arena_dir.right += 1;
+                random_pos(12)
+            };
+
+            minion.translation = Vec2::new(pos.0, pos.1).extend(1.0);
+        }
+    }
+}
+
 pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(AssetLoad).with_system(spawn_enemy_parent))
-            .add_system_set(SystemSet::on_enter(Playing).with_system(spawn_initial_enemies));
+        app.add_event::<TeleportEvent>()
+            .init_resource::<EnemyTeleportTimer>()
+            .init_resource::<EnemyCount>()
+            .add_system_set(SystemSet::on_enter(AssetLoad).with_system(spawn_enemy_parent))
+            .add_system_set(SystemSet::on_enter(Playing).with_system(spawn_initial_enemies))
+            .add_system_set(SystemSet::on_update(Playing).with_system(teleport_timer))
+            .add_system_set(SystemSet::on_update(Playing).with_system(teleport_enemy));
     }
 }

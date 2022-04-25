@@ -11,7 +11,7 @@ pub enum Action {
     RightClick,
     LeftClick,
     SelectAll,
-    ManaToggle,
+    ShieldToggle,
     RemoveSelect,
     Pause,
 }
@@ -23,7 +23,7 @@ impl Action {
         input_map.insert(RightClick, Single(Mouse(MouseButton::Right)));
         input_map.insert(LeftClick, Single(Mouse(MouseButton::Left)));
         input_map.insert(SelectAll, Single(Keyboard(KeyCode::A)));
-        input_map.insert(ManaToggle, Single(Keyboard(KeyCode::Space)));
+        input_map.insert(ShieldToggle, Single(Keyboard(KeyCode::Space)));
         input_map.insert(RemoveSelect, Single(Keyboard(KeyCode::Q)));
         input_map.insert(Pause, Single(Keyboard(KeyCode::Escape)));
 

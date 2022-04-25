@@ -20,6 +20,21 @@ pub struct ImageHandles {
     #[asset(path = "images/arena_shadow.png")]
     pub arena_shadow: Handle<Image>,
 
+    #[asset(path = "images/heart0.png")]
+    pub full_heart: Handle<Image>,
+
+    #[asset(path = "images/mana0.png")]
+    pub full_mana: Handle<Image>,
+
+    #[asset(path = "images/mage_icon.png")]
+    pub mage_icon: Handle<Image>,
+
+    #[asset(path = "images/archer_icon.png")]
+    pub archer_icon: Handle<Image>,
+
+    #[asset(path = "images/spell_icon.png")]
+    pub spell_icon: Handle<Image>,
+
     #[asset(texture_atlas(tile_size_x = 64.0, tile_size_y = 64.0, columns = 8, rows = 8,))]
     #[asset(path = "images/fireball.png")]
     pub fireball: Handle<TextureAtlas>,
@@ -31,6 +46,10 @@ pub struct ImageHandles {
     #[asset(texture_atlas(tile_size_x = 32.0, tile_size_y = 32.0, columns = 4, rows = 1,))]
     #[asset(path = "images/player.png")]
     pub player: Handle<TextureAtlas>,
+
+    #[asset(texture_atlas(tile_size_x = 128.0, tile_size_y = 128.0, columns = 4, rows = 1,))]
+    #[asset(path = "images/shield.png")]
+    pub shield: Handle<TextureAtlas>,
 
     #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 28.0, columns = 4, rows = 4,))]
     #[asset(path = "images/enemies.png")]

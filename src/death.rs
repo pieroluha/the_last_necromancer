@@ -23,6 +23,8 @@ fn game_over(query_player: Query<&Life, With<Player>>, mut app_state: ResMut<Sta
 pub struct DeathPlugin;
 impl Plugin for DeathPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_update(Playing).with_system(kill_lifeless_minions));
+        app.add_system_set(
+            SystemSet::on_update(Playing).with_system(kill_lifeless_minions.label("kill_minions")),
+        );
     }
 }

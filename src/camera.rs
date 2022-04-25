@@ -22,7 +22,7 @@ fn edit_camera_scaling(
 ) {
     let (mut camera, mut transform) = query_camera.single_mut();
     camera.scaling_mode = ScalingMode::FixedVertical;
-    camera.scale = 200.0;
+    camera.scale = 288.0;
     transform.translation.x = ARENA_OFFSET;
     transform.translation.y = ARENA_OFFSET;
 }

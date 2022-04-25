@@ -90,12 +90,10 @@ fn update_selection_box(
 
     if action.just_pressed(LeftClick) {
         *origin = cursor_position.pos;
-        for mut minion in query_minions.iter_mut() {
-            if minion.is_selected == true {
-                minion.is_selected = false;
-            }
-        }
         selected_entities.0.clear();
+        for mut minion in query_minions.iter_mut() {
+            minion.is_selected = false;
+        }
         *jimbo = true;
     }
 
@@ -119,8 +117,8 @@ fn rect_intersection(
     for select_box in read_select_event.iter() {
         for (rect_minion, minion, mut selected) in query_minion.iter_mut() {
             if select_box.0.collision_check(rect_minion) {
-                selected_entities.0.push(minion);
                 selected.is_selected = true;
+                selected_entities.0.push(minion);
             }
         }
     }
@@ -132,7 +130,16 @@ impl Plugin for SelectionBoxPlugin {
         app.init_resource::<SelectedEntities>()
             .add_event::<SelectEvent>()
             .add_system_set(SystemSet::on_enter(Playing).with_system(initialize_selection_box))
-            .add_system_set(SystemSet::on_update(Playing).with_system(rect_intersection))
-            .add_system_set(SystemSet::on_update(Playing).with_system(update_selection_box));
+            .add_system_set(
+                SystemSet::on_update(Playing).with_system(
+                    rect_intersection
+                        .label("rect_intersection")
+                        .after("update_selection"),
+                ),
+            )
+            .add_system_set(
+                SystemSet::on_update(Playing)
+                    .with_system(update_selection_box.label("update_selection")),
+            );
     }
 }

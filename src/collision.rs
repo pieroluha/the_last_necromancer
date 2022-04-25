@@ -11,14 +11,19 @@ pub enum EntityLayer {
     Player,
     Minion,
     Projectile,
+    Shield,
 }
 
-pub const PROJECTILE_MASK: [EntityLayer; 2] = [EntityLayer::Player, EntityLayer::Minion];
+pub const PROJECTILE_MASK: [EntityLayer; 3] = [
+    EntityLayer::Player,
+    EntityLayer::Minion,
+    EntityLayer::Shield,
+];
 
-#[derive(Deref, DerefMut)]
-struct HitEvent(u32);
+struct HitEvent(u32, ProjectileType);
 
 fn projectile_collisions(
+    query_projectiles: Query<(&Projectile, Entity)>,
     mut commands: Commands,
     mut hit_writer: EventWriter<HitEvent>,
     mut collisions: EventReader<CollisionEvent>,
@@ -38,17 +43,25 @@ fn projectile_collisions(
             }
         })
         .for_each(|(projectile, entity)| {
-            commands.entity(projectile).despawn_recursive();
-            hit_writer.send(HitEvent(entity.id()));
+            for (p, p_entity) in query_projectiles.iter() {
+                if projectile.id() != p_entity.id() {
+                    continue;
+                }
+
+                hit_writer.send(HitEvent(entity.id(), p.0));
+                commands.entity(projectile).despawn_recursive();
+            }
         });
 }
 
+// Add animation of projectile blowing up
 fn player_collision(
     mut hits: EventReader<HitEvent>,
-    mut query_entities: Query<(&mut Life, Entity), (With<Player>, Without<Minion>)>,
+    mut query_entities: Query<(&mut Life, Entity, &Transform), (With<Player>, Without<Minion>)>,
+    mut commands: Commands,
 ) {
     for hit in hits.iter() {
-        for (mut life, entity) in query_entities.iter_mut() {
+        for (mut life, entity, transform) in query_entities.iter_mut() {
             if hit.0 != entity.id() {
                 continue;
             }
@@ -57,16 +70,43 @@ fn player_collision(
     }
 }
 
-fn minion_collision(
+// spanwn the animation in the middle!!
+fn shield_collision(
+    query_shield: Query<Entity, With<Shield>>,
+    mut query_player: Query<&mut Mana, With<Player>>,
     mut hits: EventReader<HitEvent>,
-    mut query_entities: Query<(&mut Life, Entity, &Minion), (With<Minion>, Without<Player>)>,
+    mut commands: Commands,
 ) {
     for hit in hits.iter() {
-        for (mut life, entity, minion_type) in query_entities.iter_mut() {
+        let shield = query_shield.single();
+        let mut player_mana = query_player.single_mut();
+        if hit.0 != shield.id() {
+            continue;
+        }
+        player_mana.subtract_mana(5.0);
+    }
+}
+
+fn minion_collision(
+    mut hits: EventReader<HitEvent>,
+    mut query_entities: Query<
+        (&mut Life, Entity, &Minion, &Transform),
+        (With<Minion>, Without<Player>),
+    >,
+    mut commands: Commands,
+) {
+    for hit in hits.iter() {
+        for (mut life, entity, minion_type, transform) in query_entities.iter_mut() {
             if hit.0 != entity.id() {
                 continue;
             }
-            life.0 = life.saturating_sub(1);
+            let projectile_type = hit.1;
+
+            if (*minion_type == Minion::Demon && projectile_type == ProjectileType::Arrow)
+                || (*minion_type == Minion::Skeleton && projectile_type == ProjectileType::Fireball)
+            {
+                life.0 = life.saturating_sub(1);
+            }
         }
     }
 }
@@ -74,6 +114,7 @@ fn minion_collision(
 fn is_target(layers: CollisionLayers) -> bool {
     layers.contains_group(EntityLayer::Minion)
         || layers.contains_group(EntityLayer::Player)
+        || layers.contains_group(EntityLayer::Shield)
             && !layers.contains_group(EntityLayer::Projectile)
 }
 
@@ -81,6 +122,7 @@ fn is_projectile(layers: CollisionLayers) -> bool {
     layers.contains_group(EntityLayer::Projectile)
         && !layers.contains_group(EntityLayer::Minion)
         && !layers.contains_group(EntityLayer::Player)
+        && !layers.contains_group(EntityLayer::Shield)
 }
 
 // For the selection box collision
@@ -117,6 +159,7 @@ impl Plugin for CollisionPlugin {
             .add_event::<HitEvent>()
             .add_system_set(SystemSet::on_update(Playing).with_system(projectile_collisions))
             .add_system_set(SystemSet::on_update(Playing).with_system(minion_collision))
+            .add_system_set(SystemSet::on_update(Playing).with_system(shield_collision))
             .add_system_set(SystemSet::on_update(Playing).with_system(player_collision));
     }
 }

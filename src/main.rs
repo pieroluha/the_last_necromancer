@@ -16,6 +16,7 @@ mod pathfinding;
 mod player;
 mod projectiles;
 mod selection_box;
+mod ui;
 mod prelude {
     pub use crate::arena::*;
     pub use crate::asset_loader::*;
@@ -30,6 +31,7 @@ mod prelude {
     pub use crate::player::*;
     pub use crate::projectiles::*;
     pub use crate::selection_box::*;
+    pub use crate::ui::*;
     pub use benimator::*;
     pub use bevy::prelude::*;
 
@@ -51,11 +53,11 @@ mod prelude {
     #[derive(Default)]
     pub struct Wambo(pub u8);
 
-    #[derive(Component, Deref, DerefMut)]
+    #[derive(Component, DerefMut, Deref)]
     pub struct Life(pub u8);
-    #[derive(Component, Deref, DerefMut)]
-    pub struct Mana(pub u8);
-    #[derive(Component, Deref, DerefMut)]
+    #[derive(Component, DerefMut, Deref)]
+    pub struct Mana(pub f32);
+    #[derive(Component, DerefMut, Deref)]
     pub struct Speed(pub f32);
 
     pub const DEFAULT_WIN_WIDTH: f32 = 800.0;
@@ -93,6 +95,7 @@ fn main() {
         .add_plugin(PathfindingPlugin)
         .add_plugin(SelectionBoxPlugin)
         .add_plugin(DeathPlugin)
+        .add_plugin(UiPlugin)
         .add_plugin(ProjectilesPlugin);
 
     #[cfg(feature = "dev")]
