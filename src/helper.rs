@@ -1,10 +1,9 @@
 use crate::prelude::*;
 
 pub fn look_at_player(pos: &Vec3) -> Vec3 {
-    //let x = ARENA_OFFSET - pos.x;
-    //let y = ARENA_OFFSET - pos.y;
-    //Vec3::new(x, y, 0.0).normalize()
-    (PLAYER_POS.truncate() - pos.truncate()).extend(0.0).normalize()
+    (PLAYER_POS.truncate() - pos.truncate())
+        .extend(0.0)
+        .normalize()
 }
 
 pub fn look_at(pos: &Vec3, target: &Vec3) -> Vec3 {
@@ -23,12 +22,36 @@ pub fn heading(transform: &Transform, offset: f32) -> Transform {
     transform
 }
 
+use std::f32::consts::PI;
+const P_COUNT: usize = 12;
+const P2: f32 = PI * 2.0;
+const MORE_DIRECTIONS: [(f32, f32); 8] = [
+    (0.0, 16.0),
+    (0.0, -16.0),
+    (16.0, 0.0),
+    (-16.0, 0.0),
+    (16.0, 16.0),
+    (-16.0, 16.0),
+    (16.0, -16.0),
+    (-16.0, -16.0),
+];
 
-//pub fn rotate2d(point: Vec2, angle: f32) -> Vec2 {
-//    let x = point.x * angle.cos() - point.y * angle.sin();
-//    let y = point.x * angle.sin() + point.y * angle.cos();
-//    Vec2::new(x, y)
-//}
+pub fn spin_me_right_round() -> Vec<Vec3> {
+    let mut projectiles = Vec::new();
+
+    for pos in MORE_DIRECTIONS.iter() {
+        let transform = PLAYER_POS + Vec3::new(pos.0, pos.1, 0.0);
+        projectiles.push(transform);
+    }
+
+    projectiles
+}
+
+pub fn rotate2d(point: Vec3, angle: f32) -> Vec3 {
+    let x = point.x * angle.cos() - point.y * angle.sin();
+    let y = point.x * angle.sin() + point.y * angle.cos();
+    Vec3::new(x, y, 2.0)
+}
 
 //pub fn get_world_pos(transform: &Transform) -> Vec2 {
 //    let pos = transform.translation.truncate();

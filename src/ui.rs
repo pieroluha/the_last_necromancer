@@ -253,6 +253,7 @@ fn generate_ui(
                 ),
                 ..default()
             })
+            .insert(SpellCounter)
             .insert(Name::new("SpellCounter"));
 
             // Spell icon
@@ -282,10 +283,13 @@ fn update_mana_counter(
 ) {
     let mut text = query_ui.single_mut();
     let mana = query_player.single();
-    let percent = (100 * mana.0 as i32) / 100;
-    let percent = if percent < 0 { 0 } else { percent };
+    let percent: f32 = if mana.0 < 0.0 {
+        0.0
+    } else {
+        (mana.0 / 500.0 * 100.0).floor()
+    };
 
-    text.sections[0].value = percent.to_string();
+    text.sections[0].value = format!("{}%", percent);
 }
 
 fn update_life_counter(
@@ -294,7 +298,18 @@ fn update_life_counter(
 ) {
     let mut text = query_ui.single_mut();
     let life = query_player.single();
+
     text.sections[0].value = life.0.to_string();
+}
+
+fn update_spell_progress_counter(
+    spell_progress: Res<SpellProgress>,
+    mut query_ui: Query<&mut Text, With<SpellCounter>>,
+) {
+    let mut text = query_ui.single_mut();
+    let percent = ((spell_progress.0 / 100.0) * 100.0).floor();
+
+    text.sections[0].value = format!("{}%", percent);
 }
 
 pub struct UiPlugin;
@@ -302,6 +317,9 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(SystemSet::on_update(Playing).with_system(update_mana_counter))
             .add_system_set(SystemSet::on_update(Playing).with_system(update_life_counter))
+            .add_system_set(
+                SystemSet::on_update(Playing).with_system(update_spell_progress_counter),
+            )
             .add_system_set(SystemSet::on_enter(Playing).with_system(generate_ui));
     }
 }

@@ -78,6 +78,7 @@ fn assign_goal(
     if !action.just_pressed(RightClick) {
         return;
     }
+
     println!("Cursor Pos: {}", cursor_position.offset_pos_integer());
 
     let mut goals = VecDeque::new();
@@ -110,7 +111,7 @@ fn assign_goal(
 
     for (mut selected_unit, transform) in query_selected_unit.iter_mut() {
         if !selected_unit.is_selected {
-            continue
+            continue;
         }
 
         let goal = if let Some(g) = goals.pop_front() {
@@ -152,7 +153,7 @@ fn move_selected_units(
     mut query_selected_unit: Query<(&mut SelectedUnit, &mut Transform, &mut AnimState)>,
 ) {
     for (mut selected_unit, mut transform, mut minion_state) in query_selected_unit.iter_mut() {
-        if selected_unit.is_selected == false {
+        if !selected_unit.is_selected {
             continue;
         }
 
@@ -188,12 +189,13 @@ impl Plugin for PathfindingPlugin {
             SystemSet::on_update(Playing)
                 .with_system(assign_goal)
                 .label("assign_goal")
-                .after("update_selection"),
+                .before("move_selected"),
         )
         .add_system_set(
             SystemSet::on_update(Playing)
                 .with_system(move_selected_units)
-                .after("update_selection"),
+                .label("move_selected")
+                .after("assign_goal"),
         );
     }
 }

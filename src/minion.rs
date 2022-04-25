@@ -34,6 +34,28 @@ fn spawn_minion_parent(mut commands: Commands) {
         .insert(MinionNode);
 }
 
+
+const DEMON: [(f32, f32); 8] = [
+    (0.0, 16.0),
+    (0.0, -16.0),
+    (16.0, 0.0),
+    (-16.0, 0.0),
+    (16.0, 16.0),
+    (-16.0, 16.0),
+    (16.0, -16.0),
+    (-16.0, -16.0),
+];
+
+const SKELLY: [(f32, f32); 8] = [
+    (0.0, 24.0),
+    (0.0, -24.0),
+    (24.0, 0.0),
+    (-24.0, 0.0),
+    (24.0, 24.0),
+    (-24.0, 24.0),
+    (24.0, -24.0),
+    (-24.0, -24.0),
+];
 fn spawn_initial_minions(
     image_handles: Res<ImageHandles>,
     animation_handles: Res<AnimationHandles>,
@@ -41,31 +63,11 @@ fn spawn_initial_minions(
     mut commands: Commands,
 ) {
     let parent_node = query_minion_node.single();
-
-    let demon_positions = [
-        Vec2::new(152.0, 160.0),
-        Vec2::new(152.0, 256.0),
-        Vec2::new(248.0, 258.0),
-        Vec2::new(248.0, 160.0),
-        Vec2::new(248.0, 160.0),
-        Vec2::new(248.0, 160.0),
-        Vec2::new(248.0, 160.0),
-        Vec2::new(248.0, 160.0),
-    ];
-
-    let skelly_positions = [
-        Vec2::new(152.0, 160.0),
-        Vec2::new(152.0, 256.0),
-        Vec2::new(248.0, 258.0),
-        Vec2::new(248.0, 160.0),
-        Vec2::new(248.0, 160.0),
-        Vec2::new(248.0, 160.0),
-        Vec2::new(248.0, 160.0),
-        Vec2::new(248.0, 160.0),
-    ];
+    let p_pos = PLAYER_POS;
 
     let mut minion_batch = Vec::new();
-    for pos in demon_positions.into_iter() {
+    for pos in DEMON.iter() {
+        let pos = Vec2::new(p_pos.x + pos.0*2.0, p_pos.y + pos.1*2.0);
         minion_batch.push((
             SpriteSheetBundle {
                 texture_atlas: image_handles.demon.clone(),
@@ -73,6 +75,18 @@ fn spawn_initial_minions(
                 ..default()
             },
             Minion::Demon,
+        ));
+    }
+
+    for pos in SKELLY.iter() {
+        let pos = Vec2::new(p_pos.x + pos.0*4.0, p_pos.y + pos.1*4.0);
+        minion_batch.push((
+            SpriteSheetBundle {
+                texture_atlas: image_handles.skeleton.clone(),
+                transform: Transform::from_translation(pos.extend(1.0)),
+                ..default()
+            },
+            Minion::Skeleton,
         ));
     }
 

@@ -6,9 +6,37 @@ fn kill_lifeless_minions(
 ) {
     for (minion, life) in query_minions.iter() {
         if life.0 == 0 {
-            print!("Dead Minion");
             commands.entity(minion).despawn_recursive();
         }
+    }
+}
+
+fn kill_lifeless_enemies(
+    mut commands: Commands,
+    mut enemy_count: ResMut<EnemyCount>,
+    query_enemies: Query<(Entity, &Life, &mut Enemy)>,
+) {
+    for (enemy, life, enemy_type) in query_enemies.iter() {
+        if life.0 == 0 {
+            commands.entity(enemy).despawn_recursive();
+
+            match enemy_type.0 {
+                EnemyType::Archer(true) | EnemyType::Archer(false) => {
+                    enemy_count.archers = enemy_count.archers.saturating_sub(1);
+                }
+                EnemyType::Mage(true) | EnemyType::Mage(false) => {
+                    enemy_count.mages = enemy_count.archers.saturating_sub(1);
+                }
+            }
+
+            enemy_count.current = enemy_count.current.saturating_sub(1);
+        }
+    }
+}
+
+fn winner(enemy_count: Res<EnemyCount>, mut app_state: ResMut<State<GameState>>) {
+    if enemy_count.archers == 0 && enemy_count.mages == 0 {
+        app_state.set(Winner).unwrap();
     }
 }
 
@@ -25,6 +53,9 @@ impl Plugin for DeathPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_update(Playing).with_system(kill_lifeless_minions.label("kill_minions")),
-        );
+        )
+        .add_system_set(SystemSet::on_update(Playing).with_system(winner))
+        .add_system_set(SystemSet::on_update(Playing).with_system(game_over))
+        .add_system_set(SystemSet::on_update(Playing).with_system(kill_lifeless_enemies));
     }
 }

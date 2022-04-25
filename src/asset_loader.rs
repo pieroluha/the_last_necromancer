@@ -17,6 +17,12 @@ pub struct ImageHandles {
     #[asset(path = "images/arena.png")]
     pub arena: Handle<Image>,
 
+    #[asset(path = "images/won.png")]
+    pub win: Handle<Image>,
+
+    #[asset(path = "images/died.png")]
+    pub lose: Handle<Image>,
+
     #[asset(path = "images/arena_shadow.png")]
     pub arena_shadow: Handle<Image>,
 
@@ -38,6 +44,18 @@ pub struct ImageHandles {
     #[asset(texture_atlas(tile_size_x = 64.0, tile_size_y = 64.0, columns = 8, rows = 8,))]
     #[asset(path = "images/fireball.png")]
     pub fireball: Handle<TextureAtlas>,
+
+    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, columns = 6, rows = 1,))]
+    #[asset(path = "images/skull_buster.png")]
+    pub skull_buster: Handle<TextureAtlas>,
+
+    #[asset(texture_atlas(tile_size_x = 64.0, tile_size_y = 64.0, columns = 5, rows = 1,))]
+    #[asset(path = "images/dark_edge.png")]
+    pub dark_edge: Handle<TextureAtlas>,
+
+    #[asset(texture_atlas(tile_size_x = 32.0, tile_size_y = 32.0, columns = 2, rows = 2,))]
+    #[asset(path = "images/stupid.png")]
+    pub stupid: Handle<TextureAtlas>,
 
     #[asset(texture_atlas(tile_size_x = 13.0, tile_size_y = 16.0, columns = 10, rows = 1,))]
     #[asset(path = "images/arrow.png")]
@@ -81,6 +99,8 @@ pub struct AnimationHandles {
     pub demon_run: Handle<SpriteSheetAnimation>,
     pub skeleton_idle: Handle<SpriteSheetAnimation>,
     pub skeleton_run: Handle<SpriteSheetAnimation>,
+    pub dark_edge: Handle<SpriteSheetAnimation>,
+    pub skull_buster: Handle<SpriteSheetAnimation>
 }
 
 impl AnimationHandles {
@@ -110,6 +130,16 @@ fn setup_animation_handles(
 ) {
     let fireball = animations.add(SpriteSheetAnimation::from_range(
         0..=60,
+        Duration::from_millis(100),
+    ));
+
+    let dark_edge = animations.add(SpriteSheetAnimation::from_range(
+        0..=4,
+        Duration::from_millis(100),
+    ));
+
+    let skull_buster = animations.add(SpriteSheetAnimation::from_range(
+        0..=5,
         Duration::from_millis(100),
     ));
 
@@ -181,6 +211,8 @@ fn setup_animation_handles(
         demon_run,
         skeleton_idle,
         skeleton_run,
+        dark_edge,
+        skull_buster,
     });
 }
 

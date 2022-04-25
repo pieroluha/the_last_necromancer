@@ -44,6 +44,12 @@ impl SelectedUnit {
     pub fn set_goal(&mut self, goal: &Pos) {
         self.goal = Vec2::new((goal.0 << 4) as f32, (goal.1 << 4) as f32);
     }
+
+    pub fn clear(&mut self) {
+        self.path = VecDeque::new();
+        self.goal = Vec2::ZERO;
+        self.is_selected = false;
+    }
 }
 
 const TRANS_GREEN: Color = Color::rgba(104.0 / 255.0, 110.0 / 255.0, 70.0 / 255.0, 50.0 / 255.0);
@@ -92,7 +98,7 @@ fn update_selection_box(
         *origin = cursor_position.pos;
         selected_entities.0.clear();
         for mut minion in query_minions.iter_mut() {
-            minion.is_selected = false;
+            minion.clear();
         }
         *jimbo = true;
     }

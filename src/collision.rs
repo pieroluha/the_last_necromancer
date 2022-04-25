@@ -11,6 +11,7 @@ pub enum EntityLayer {
     Player,
     Minion,
     Projectile,
+    SpecialProjectile,
     Shield,
 }
 
@@ -20,11 +21,11 @@ pub const PROJECTILE_MASK: [EntityLayer; 3] = [
     EntityLayer::Shield,
 ];
 
-struct HitEvent(u32, ProjectileType);
+struct HitEvent(u32, ProjectileType, Entity);
 
 fn projectile_collisions(
     query_projectiles: Query<(&Projectile, Entity)>,
-    mut commands: Commands,
+    //mut commands: Commands,
     mut hit_writer: EventWriter<HitEvent>,
     mut collisions: EventReader<CollisionEvent>,
 ) {
@@ -48,8 +49,8 @@ fn projectile_collisions(
                     continue;
                 }
 
-                hit_writer.send(HitEvent(entity.id(), p.0));
-                commands.entity(projectile).despawn_recursive();
+                hit_writer.send(HitEvent(entity.id(), p.0, projectile));
+                //commands.entity(projectile).despawn_recursive();
             }
         });
 }
@@ -57,16 +58,18 @@ fn projectile_collisions(
 // Add animation of projectile blowing up
 fn player_collision(
     mut hits: EventReader<HitEvent>,
-    mut query_entities: Query<(&mut Life, Entity, &Transform), (With<Player>, Without<Minion>)>,
+    mut query_player: Query<(&mut Life, Entity, &Transform), With<Player>>,
     mut commands: Commands,
 ) {
     for hit in hits.iter() {
-        for (mut life, entity, transform) in query_entities.iter_mut() {
-            if hit.0 != entity.id() {
-                continue;
-            }
-            life.0 = life.saturating_sub(1);
+        let (mut life, entity, transform) = query_player.single_mut();
+        if hit.0 != entity.id() {
+            continue;
         }
+        if hit.1 != ProjectileType::Special {
+            commands.entity(hit.2).despawn_recursive();
+        }
+        life.0 = life.saturating_sub(1);
     }
 }
 
@@ -82,6 +85,9 @@ fn shield_collision(
         let mut player_mana = query_player.single_mut();
         if hit.0 != shield.id() {
             continue;
+        }
+        if hit.1 != ProjectileType::Special {
+            commands.entity(hit.2).despawn_recursive();
         }
         player_mana.subtract_mana(2.5);
     }
@@ -100,6 +106,10 @@ fn minion_collision(
             if hit.0 != entity.id() {
                 continue;
             }
+            if hit.1 != ProjectileType::Special {
+                commands.entity(hit.2).despawn_recursive();
+            }
+
             let projectile_type = hit.1;
 
             if (*minion_type == Minion::Demon && projectile_type == ProjectileType::Arrow)
@@ -111,18 +121,41 @@ fn minion_collision(
     }
 }
 
+fn enemy_collision(
+    mut hits: EventReader<HitEvent>,
+    mut query_entities: Query<(&mut Life, Entity, &Transform), With<Enemy>>,
+    mut commands: Commands,
+) {
+    for hit in hits.iter() {
+        for (mut life, entity, transform) in query_entities.iter_mut() {
+            if hit.0 != entity.id() {
+                continue;
+            }
+            if hit.1 == ProjectileType::Special {
+                println!("Wawmbo");
+                life.0 = life.saturating_sub(1);
+            } else {
+                continue;
+            }
+        }
+    }
+}
+
 fn is_target(layers: CollisionLayers) -> bool {
     layers.contains_group(EntityLayer::Minion)
         || layers.contains_group(EntityLayer::Player)
         || layers.contains_group(EntityLayer::Shield)
+        || layers.contains_group(EntityLayer::Enemy)
             && !layers.contains_group(EntityLayer::Projectile)
 }
 
 fn is_projectile(layers: CollisionLayers) -> bool {
     layers.contains_group(EntityLayer::Projectile)
-        && !layers.contains_group(EntityLayer::Minion)
-        && !layers.contains_group(EntityLayer::Player)
-        && !layers.contains_group(EntityLayer::Shield)
+        || layers.contains_group(EntityLayer::SpecialProjectile)
+            && !layers.contains_group(EntityLayer::Minion)
+            && !layers.contains_group(EntityLayer::Player)
+            && !layers.contains_group(EntityLayer::Shield)
+            && !layers.contains_group(EntityLayer::Enemy)
 }
 
 // For the selection box collision
@@ -159,6 +192,7 @@ impl Plugin for CollisionPlugin {
             .add_event::<HitEvent>()
             .add_system_set(SystemSet::on_update(Playing).with_system(projectile_collisions))
             .add_system_set(SystemSet::on_update(Playing).with_system(minion_collision))
+            .add_system_set(SystemSet::on_update(Playing).with_system(enemy_collision))
             .add_system_set(SystemSet::on_update(Playing).with_system(shield_collision))
             .add_system_set(SystemSet::on_update(Playing).with_system(player_collision));
     }

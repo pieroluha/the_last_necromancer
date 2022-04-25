@@ -17,6 +17,7 @@ mod player;
 mod projectiles;
 mod selection_box;
 mod ui;
+mod win_lose;
 mod prelude {
     pub use crate::arena::*;
     pub use crate::asset_loader::*;
@@ -32,6 +33,7 @@ mod prelude {
     pub use crate::projectiles::*;
     pub use crate::selection_box::*;
     pub use crate::ui::*;
+    pub use crate::win_lose::*;
     pub use benimator::*;
     pub use bevy::prelude::*;
 
@@ -43,8 +45,8 @@ mod prelude {
         AssetLoad,
         StartMenu,
         Playing,
+        Winner,
         GameOver,
-        Pause,
         Exit,
     }
     pub use Action::*;

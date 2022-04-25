@@ -5,19 +5,23 @@ use crate::prelude::*;
 pub enum ProjectileType {
     Arrow,
     Fireball,
+    Special,
 }
 
 #[derive(Component, Clone, Copy)]
 pub struct Projectile(pub ProjectileType);
 
-//#[derive(Component, Deref, DerefMut)]
-//pub struct DespawnTimer(Timer);
+#[derive(Component, Deref, DerefMut)]
+pub struct DespawnTimer(pub Timer);
 
 #[derive(Component, Deref, DerefMut)]
 pub struct ShootProjectileTimer(pub Timer);
 
 #[derive(Component)]
 struct ProjectileNode;
+
+#[derive(Component)]
+pub struct UltimaNode;
 
 fn setup_projectile_parent(mut commands: Commands) {
     commands
@@ -26,6 +30,15 @@ fn setup_projectile_parent(mut commands: Commands) {
         .insert(Transform::default())
         .insert(ProjectileNode)
         .insert(Name::new("ProjectileNode"));
+}
+
+fn setup_ultima_parent(mut commands: Commands) {
+    commands
+        .spawn()
+        .insert(GlobalTransform::default())
+        .insert(Transform::default())
+        .insert(UltimaNode)
+        .insert(Name::new("UltimaParent"));
 }
 
 pub const BOLT_BASE_SPEED: f32 = 50.0;
@@ -97,7 +110,6 @@ fn enemy_shoot_projectile(
                 )
                 .insert(Speed(base_speed))
                 .insert(Projectile(projectile_type))
-                //.insert(DespawnTimer(Timer::from_seconds(5.0, false)))
                 .id();
 
             commands.entity(parent_node).add_child(child);
@@ -114,18 +126,17 @@ fn move_projectiles(
     }
 }
 
-//fn despawn_timer(
-//    time: Res<Time>,
-//    mut commands: Commands,
-//    mut query_projectiles: Query<(&mut DespawnTimer, Entity), With<Projectile>>,
-//) {
-//    for (mut timer, projectile) in query_projectiles.iter_mut() {
-//        if timer.tick(time.delta()).just_finished() {
-//            commands.entity(projectile).despawn_recursive();
-//            println!("Projectile despawned: {}", projectile.id());
-//        }
-//    }
-//}
+fn despawn_timer(
+    time: Res<Time>,
+    mut commands: Commands,
+    mut query_projectiles: Query<(&mut DespawnTimer, Entity), With<Projectile>>,
+) {
+    for (mut timer, projectile) in query_projectiles.iter_mut() {
+        if timer.tick(time.delta()).just_finished() {
+            commands.entity(projectile).despawn_recursive();
+        }
+    }
+}
 
 pub struct ProjectilesPlugin;
 impl Plugin for ProjectilesPlugin {
@@ -137,6 +148,8 @@ impl Plugin for ProjectilesPlugin {
 
         app.add_system_set(SystemSet::on_enter(AssetLoad).with_system(setup_projectile_parent))
             .add_system_set(SystemSet::on_update(Playing).with_system(enemy_shoot_projectile))
+            .add_system_set(SystemSet::on_update(Playing).with_system(despawn_timer))
+            .add_system_set(SystemSet::on_enter(Playing).with_system(setup_ultima_parent))
             .add_system_set(SystemSet::on_update(Playing).with_system(move_projectiles));
     }
 }

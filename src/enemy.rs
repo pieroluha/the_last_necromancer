@@ -9,11 +9,19 @@ pub enum EnemyType {
 #[derive(Component, Deref, DerefMut, PartialEq)]
 pub struct Enemy(pub EnemyType);
 
-#[derive(Default)]
 pub struct EnemyCount {
-    all: u8,
-    mages: u8,
-    archers: u8,
+    pub current: u8,
+    pub mages: u8,
+    pub archers: u8,
+}
+impl Default for EnemyCount {
+    fn default() -> Self {
+        Self {
+            current: 15,
+            mages: 100,
+            archers: 100,
+        }
+    }
 }
 
 #[derive(Component)]
@@ -45,6 +53,7 @@ fn spawn_initial_enemies(
     animation_handles: Res<AnimationHandles>,
     wambo: Res<Wambo>,
     query_enemy_node: Query<Entity, With<EnemyNode>>,
+    enemy_count: Res<EnemyCount>,
     mut commands: Commands,
 ) {
     let enemy_node = query_enemy_node.single();
@@ -62,7 +71,7 @@ fn spawn_initial_enemies(
     let min: u8 = 3 - wambo.0;
     let cap: u8 = 6 - wambo.0;
     for mage in mage_batch.into_iter() {
-        let enemy_type = get_enemy_type();
+        let enemy_type = get_enemy_type(&enemy_count);
         let duration = fastrand::u8(min..cap) as f32;
         let child = commands
             .spawn_bundle(mage)
@@ -70,9 +79,57 @@ fn spawn_initial_enemies(
             .insert(Life(1))
             .insert(animation_handles.enemy_sprite(enemy_type).clone())
             .insert(Play)
+            .insert(RigidBody::KinematicPositionBased)
+            .insert(CollisionShape::Cuboid {
+                half_extends: Vec2::splat(16.0).extend(0.0),
+                border_radius: None,
+            })
+            .insert(CollisionLayers::new(
+                EntityLayer::Enemy,
+                EntityLayer::Projectile,
+            ))
             .insert(ShootProjectileTimer(Timer::from_seconds(duration, true)))
             .id();
         commands.entity(enemy_node).add_child(child);
+    }
+}
+
+fn current_enemy_count(
+    enemy_count: Res<EnemyCount>,
+    image_handles: Res<ImageHandles>,
+    animation_handles: Res<AnimationHandles>,
+    query_enemy_node: Query<Entity, With<EnemyNode>>,
+    mut commands: Commands,
+) {
+    let parent = query_enemy_node.single();
+    if enemy_count.current != 15 {
+        let (x, y) = random_pos(0);
+        let mage = SpriteSheetBundle {
+            texture_atlas: image_handles.enemies.clone(),
+            transform: Transform::from_xyz(x, y, 1.0),
+            ..default()
+        };
+        let enemy_type = get_enemy_type(&enemy_count);
+        let duration = fastrand::u8(3..6) as f32;
+        let child = commands
+            .spawn_bundle(mage)
+            .insert(Enemy(enemy_type.clone()))
+            .insert(Life(1))
+            .insert(animation_handles.enemy_sprite(enemy_type).clone())
+            .insert(Play)
+            .insert(RigidBody::Sensor)
+            .insert(CollisionShape::Cuboid {
+                half_extends: Vec2::splat(16.0 / 2.0).extend(0.0),
+                border_radius: None,
+            })
+            .insert(CollisionLayers::new(
+                EntityLayer::Enemy,
+                EntityLayer::Projectile,
+            ))
+            .insert(ShootProjectileTimer(Timer::from_seconds(duration, true)))
+            .id();
+
+        commands.entity(parent).add_child(child);
     }
 }
 
@@ -116,11 +173,17 @@ fn random_pos(i: u32) -> (f32, f32) {
     (x as f32, y as f32)
 }
 
-fn get_enemy_type() -> EnemyType {
-    if fastrand::bool() {
-        EnemyType::Mage(fastrand::bool())
-    } else {
+fn get_enemy_type(enemy_count: &EnemyCount) -> EnemyType {
+    if enemy_count.mages != 0 && enemy_count.archers != 0 {
+        if fastrand::bool() {
+            return EnemyType::Mage(fastrand::bool());
+        } else {
+            return EnemyType::Archer(fastrand::bool());
+        }
+    } else if enemy_count.mages == 0 {
         EnemyType::Archer(fastrand::bool())
+    } else {
+        EnemyType::Mage(fastrand::bool())
     }
 }
 
@@ -189,6 +252,7 @@ impl Plugin for EnemyPlugin {
         app.add_event::<TeleportEvent>()
             .init_resource::<EnemyTeleportTimer>()
             .init_resource::<EnemyCount>()
+            .add_system_set(SystemSet::on_update(Playing).with_system(current_enemy_count))
             .add_system_set(SystemSet::on_enter(AssetLoad).with_system(spawn_enemy_parent))
             .add_system_set(SystemSet::on_enter(Playing).with_system(spawn_initial_enemies))
             .add_system_set(SystemSet::on_update(Playing).with_system(teleport_timer))
