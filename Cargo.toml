@@ -15,7 +15,7 @@ opt-level = 1
 opt-level = 3
 lto = "thin"
 codegen-units = 1
-strip = true
+#strip = true
 
 [features]
 default = [
@@ -34,13 +34,6 @@ default = [
 ]
 dev = ["bevy/dynamic", "bevy-inspector-egui"]
 
-[target.x86_64-pc-windows-msvc]
-linker = "lld"
-rustflags = [
-  "-Lnative=/home/pieroluha/.local/lib/xwin/crt/lib/x86_64",
-  "-Lnative=/home/pieroluha/.local/lib/xwin/sdk/lib/um/x86_64",
-  "-Lnative=/home/pieroluha/.local/lib/xwin/sdk/lib/ucrt/x86_64"
-]
 
 # ???
 #[target.'cfg(target_os = "linux")'.dependencies]
