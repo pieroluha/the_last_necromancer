@@ -34,7 +34,6 @@ fn spawn_minion_parent(mut commands: Commands) {
         .insert(MinionNode);
 }
 
-
 const DEMON: [(f32, f32); 8] = [
     (0.0, 16.0),
     (0.0, -16.0),
@@ -56,18 +55,20 @@ const SKELLY: [(f32, f32); 8] = [
     (24.0, -24.0),
     (-24.0, -24.0),
 ];
+
 fn spawn_initial_minions(
+    mut commands: Commands,
     image_handles: Res<ImageHandles>,
     animation_handles: Res<AnimationHandles>,
     query_minion_node: Query<Entity, With<MinionNode>>,
-    mut commands: Commands,
 ) {
     let parent_node = query_minion_node.single();
     let p_pos = PLAYER_POS;
 
     let mut minion_batch = Vec::new();
-    for pos in DEMON.iter() {
-        let pos = Vec2::new(p_pos.x + pos.0*2.0, p_pos.y + pos.1*2.0);
+
+    for pos in DEMON {//DEMON.iter() {
+        let pos = Vec2::new(p_pos.x + pos.0 * 2.5, p_pos.y + pos.1 * 2.5);
         minion_batch.push((
             SpriteSheetBundle {
                 texture_atlas: image_handles.demon.clone(),
@@ -79,7 +80,7 @@ fn spawn_initial_minions(
     }
 
     for pos in SKELLY.iter() {
-        let pos = Vec2::new(p_pos.x + pos.0*4.0, p_pos.y + pos.1*4.0);
+        let pos = Vec2::new(p_pos.x + pos.0 * 3.0, p_pos.y + pos.1 * 3.0);
         minion_batch.push((
             SpriteSheetBundle {
                 texture_atlas: image_handles.skeleton.clone(),
@@ -104,10 +105,10 @@ fn spawn_initial_minions(
             .insert(SelectedUnit::default())
             .insert(animation_handle)
             .insert(Play)
-            .insert(Life(15))
+            .insert(Life(8))
             .insert(RigidBody::KinematicPositionBased)
             .insert(CollisionShape::Cuboid {
-                half_extends: (size / 2.0).extend(0.0),
+                half_extends: (size / 2.0).extend(2.0),
                 border_radius: None,
             })
             .insert(CollisionLayers::new(

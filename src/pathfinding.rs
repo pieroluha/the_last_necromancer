@@ -147,7 +147,7 @@ fn assign_goal(
 }
 
 const MINION_SPEED: f32 = 200.0;
-const TARGET_DISTANCE: f32 = 4.0;
+const TARGET_DISTANCE: f32 = 16.0;
 fn move_selected_units(
     time: Res<Time>,
     mut query_selected_unit: Query<(&mut SelectedUnit, &mut Transform, &mut AnimState)>,

@@ -11,7 +11,6 @@ pub enum EntityLayer {
     Player,
     Minion,
     Projectile,
-    SpecialProjectile,
     Shield,
 }
 
@@ -21,11 +20,12 @@ pub const PROJECTILE_MASK: [EntityLayer; 3] = [
     EntityLayer::Shield,
 ];
 
-struct HitEvent(u32, ProjectileType, Entity);
+struct HitEvent(u32, ProjectileType);
+
+const PROJECTILE_GULAG: Vec3 = const_vec3!([6969.0, 6969.0, 0.0]);
 
 fn projectile_collisions(
-    query_projectiles: Query<(&Projectile, Entity)>,
-    //mut commands: Commands,
+    mut query_projectiles: Query<(&Projectile, Entity, &mut Transform, &mut ProjectileHitData)>,
     mut hit_writer: EventWriter<HitEvent>,
     mut collisions: EventReader<CollisionEvent>,
 ) {
@@ -44,13 +44,16 @@ fn projectile_collisions(
             }
         })
         .for_each(|(projectile, entity)| {
-            for (p, p_entity) in query_projectiles.iter() {
-                if projectile.id() != p_entity.id() {
+            for (projectile_type, match_projectile, mut transform, mut hit_data) in
+                query_projectiles.iter_mut()
+            {
+                if projectile.id() != match_projectile.id() {
                     continue;
                 }
-
-                hit_writer.send(HitEvent(entity.id(), p.0, projectile));
-                //commands.entity(projectile).despawn_recursive();
+                hit_data.position_of_hit = transform.translation;
+                hit_data.hit = true;
+                transform.translation = PROJECTILE_GULAG;
+                hit_writer.send(HitEvent(entity.id(), projectile_type.0));
             }
         });
 }
@@ -58,27 +61,24 @@ fn projectile_collisions(
 // Add animation of projectile blowing up
 fn player_collision(
     mut hits: EventReader<HitEvent>,
-    mut query_player: Query<(&mut Life, Entity, &Transform), With<Player>>,
-    mut commands: Commands,
+    mut query_player: Query<(&mut Life, Entity), With<Player>>,
 ) {
     for hit in hits.iter() {
-        let (mut life, entity, transform) = query_player.single_mut();
-        if hit.0 != entity.id() {
+        let (mut life, player) = query_player.single_mut();
+        if hit.0 != player.id() {
             continue;
         }
-        if hit.1 != ProjectileType::Special {
-            commands.entity(hit.2).despawn_recursive();
+        if hit.1 == ProjectileType::Special {
+            continue;
         }
         life.0 = life.saturating_sub(1);
     }
 }
 
-// spanwn the animation in the middle!!
 fn shield_collision(
     query_shield: Query<Entity, With<Shield>>,
     mut query_player: Query<&mut Mana, With<Player>>,
     mut hits: EventReader<HitEvent>,
-    mut commands: Commands,
 ) {
     for hit in hits.iter() {
         let shield = query_shield.single();
@@ -86,8 +86,8 @@ fn shield_collision(
         if hit.0 != shield.id() {
             continue;
         }
-        if hit.1 != ProjectileType::Special {
-            commands.entity(hit.2).despawn_recursive();
+        if hit.1 == ProjectileType::Special {
+            continue;
         }
         player_mana.subtract_mana(2.5);
     }
@@ -95,19 +95,16 @@ fn shield_collision(
 
 fn minion_collision(
     mut hits: EventReader<HitEvent>,
-    mut query_entities: Query<
-        (&mut Life, Entity, &Minion, &Transform),
-        (With<Minion>, Without<Player>),
-    >,
-    mut commands: Commands,
+    mut query_entities: Query<(&mut Life, Entity, &Minion), (With<Minion>, Without<Player>)>,
 ) {
     for hit in hits.iter() {
-        for (mut life, entity, minion_type, transform) in query_entities.iter_mut() {
+        for (mut life, entity, minion_type) in query_entities.iter_mut() {
             if hit.0 != entity.id() {
                 continue;
             }
-            if hit.1 != ProjectileType::Special {
-                commands.entity(hit.2).despawn_recursive();
+
+            if hit.1 == ProjectileType::Special {
+                continue;
             }
 
             let projectile_type = hit.1;
@@ -123,19 +120,16 @@ fn minion_collision(
 
 fn enemy_collision(
     mut hits: EventReader<HitEvent>,
-    mut query_entities: Query<(&mut Life, Entity, &Transform), With<Enemy>>,
-    mut commands: Commands,
+    mut query_entities: Query<(&mut Life, Entity), With<Enemy>>,
 ) {
     for hit in hits.iter() {
-        for (mut life, entity, transform) in query_entities.iter_mut() {
+        for (mut life, entity) in query_entities.iter_mut() {
+
             if hit.0 != entity.id() {
                 continue;
             }
             if hit.1 == ProjectileType::Special {
-                println!("Wawmbo");
                 life.0 = life.saturating_sub(1);
-            } else {
-                continue;
             }
         }
     }
@@ -151,11 +145,10 @@ fn is_target(layers: CollisionLayers) -> bool {
 
 fn is_projectile(layers: CollisionLayers) -> bool {
     layers.contains_group(EntityLayer::Projectile)
-        || layers.contains_group(EntityLayer::SpecialProjectile)
-            && !layers.contains_group(EntityLayer::Minion)
-            && !layers.contains_group(EntityLayer::Player)
-            && !layers.contains_group(EntityLayer::Shield)
-            && !layers.contains_group(EntityLayer::Enemy)
+        && !layers.contains_group(EntityLayer::Minion)
+        && !layers.contains_group(EntityLayer::Player)
+        && !layers.contains_group(EntityLayer::Shield)
+        && !layers.contains_group(EntityLayer::Enemy)
 }
 
 // For the selection box collision

@@ -35,6 +35,8 @@ mod prelude {
     pub use crate::ui::*;
     pub use crate::win_lose::*;
     pub use benimator::*;
+    pub use bevy::math::const_vec2;
+    pub use bevy::math::const_vec3;
     pub use bevy::prelude::*;
 
     #[cfg(feature = "dev")]
@@ -98,6 +100,7 @@ fn main() {
         .add_plugin(SelectionBoxPlugin)
         .add_plugin(DeathPlugin)
         .add_plugin(UiPlugin)
+        .add_plugin(WinLosePlugin)
         .add_plugin(ProjectilesPlugin);
 
     #[cfg(feature = "dev")]

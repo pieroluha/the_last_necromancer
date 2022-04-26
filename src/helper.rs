@@ -23,8 +23,6 @@ pub fn heading(transform: &Transform, offset: f32) -> Transform {
 }
 
 use std::f32::consts::PI;
-const P_COUNT: usize = 12;
-const P2: f32 = PI * 2.0;
 const MORE_DIRECTIONS: [(f32, f32); 8] = [
     (0.0, 16.0),
     (0.0, -16.0),

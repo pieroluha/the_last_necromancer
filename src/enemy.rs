@@ -58,6 +58,7 @@ fn spawn_initial_enemies(
 ) {
     let enemy_node = query_enemy_node.single();
     let mut mage_batch = Vec::new();
+
     for i in 0..ENEMY_COUNT {
         let (x, y) = random_pos(i);
         mage_batch.push(SpriteSheetBundle {
@@ -66,7 +67,6 @@ fn spawn_initial_enemies(
             ..default()
         })
     }
-    // function for enemy type and projectile tuple
 
     let min: u8 = 3 - wambo.0;
     let cap: u8 = 6 - wambo.0;
@@ -81,7 +81,7 @@ fn spawn_initial_enemies(
             .insert(Play)
             .insert(RigidBody::KinematicPositionBased)
             .insert(CollisionShape::Cuboid {
-                half_extends: Vec2::splat(16.0).extend(0.0),
+                half_extends: Vec2::splat(16.0 * 0.5).extend(0.0),
                 border_radius: None,
             })
             .insert(CollisionLayers::new(
@@ -90,25 +90,31 @@ fn spawn_initial_enemies(
             ))
             .insert(ShootProjectileTimer(Timer::from_seconds(duration, true)))
             .id();
+
         commands.entity(enemy_node).add_child(child);
     }
 }
 
 fn current_enemy_count(
-    enemy_count: Res<EnemyCount>,
+    mut enemy_count: ResMut<EnemyCount>,
     image_handles: Res<ImageHandles>,
     animation_handles: Res<AnimationHandles>,
     query_enemy_node: Query<Entity, With<EnemyNode>>,
     mut commands: Commands,
 ) {
     let parent = query_enemy_node.single();
-    if enemy_count.current != 15 {
-        let (x, y) = random_pos(0);
+
+    if enemy_count.current != 16 {
+        let i = fastrand::u32(0..16);
+        let (x, y) = random_pos(i);
+        enemy_count.current += 1;
+
         let mage = SpriteSheetBundle {
             texture_atlas: image_handles.enemies.clone(),
             transform: Transform::from_xyz(x, y, 1.0),
             ..default()
         };
+
         let enemy_type = get_enemy_type(&enemy_count);
         let duration = fastrand::u8(3..6) as f32;
         let child = commands
@@ -117,9 +123,9 @@ fn current_enemy_count(
             .insert(Life(1))
             .insert(animation_handles.enemy_sprite(enemy_type).clone())
             .insert(Play)
-            .insert(RigidBody::Sensor)
+            .insert(RigidBody::KinematicPositionBased)
             .insert(CollisionShape::Cuboid {
-                half_extends: Vec2::splat(16.0 / 2.0).extend(0.0),
+                half_extends: Vec2::splat(16.0 * 0.5).extend(0.0),
                 border_radius: None,
             })
             .insert(CollisionLayers::new(
@@ -132,14 +138,6 @@ fn current_enemy_count(
         commands.entity(parent).add_child(child);
     }
 }
-
-// if enemy.count.mage > 0 && enemy.count.archer > 0 {
-//      fastrand::bool()
-// } else if enemy.count.mage == 0 {
-//      archer
-// } else {
-//      mage
-// }
 
 // Create a random number from 0 to 15
 fn random_pos(i: u32) -> (f32, f32) {
@@ -174,17 +172,19 @@ fn random_pos(i: u32) -> (f32, f32) {
 }
 
 fn get_enemy_type(enemy_count: &EnemyCount) -> EnemyType {
-    if enemy_count.mages != 0 && enemy_count.archers != 0 {
+    let enemy_type = if enemy_count.mages != 0 && enemy_count.archers != 0 {
         if fastrand::bool() {
-            return EnemyType::Mage(fastrand::bool());
+            EnemyType::Mage(fastrand::bool())
         } else {
-            return EnemyType::Archer(fastrand::bool());
+            EnemyType::Archer(fastrand::bool())
         }
     } else if enemy_count.mages == 0 {
         EnemyType::Archer(fastrand::bool())
     } else {
         EnemyType::Mage(fastrand::bool())
-    }
+    };
+
+    enemy_type
 }
 
 pub struct EnemyTeleportTimer {
@@ -222,11 +222,11 @@ struct ArenaDirection {
 
 fn teleport_enemy(
     mut event_reader: EventReader<TeleportEvent>,
-    mut query_minions: Query<&mut Transform, With<Enemy>>,
+    mut query_enemy: Query<&mut Transform, With<Enemy>>,
 ) {
     for _teleport_event in event_reader.iter() {
         let mut arena_dir = ArenaDirection::default();
-        for mut minion in query_minions.iter_mut() {
+        for mut enemy in query_enemy.iter_mut() {
             let pos = if arena_dir.above < 4 {
                 arena_dir.above += 1;
                 random_pos(0)
@@ -241,7 +241,7 @@ fn teleport_enemy(
                 random_pos(12)
             };
 
-            minion.translation = Vec2::new(pos.0, pos.1).extend(1.0);
+            enemy.translation = Vec2::new(pos.0, pos.1).extend(1.0);
         }
     }
 }

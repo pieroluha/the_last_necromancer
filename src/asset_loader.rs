@@ -3,12 +3,15 @@ use crate::prelude::*;
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 use std::time::Duration;
 
+pub const HIT_SIZE: Vec2 = const_vec2!([16.0, 16.0]);
+
 #[derive(AssetCollection)]
 pub struct FontHandles {
     #[asset(path = "fonts/DungeonFont.ttf")]
     pub dungeon_font: Handle<Font>,
 }
 
+// Should have broken this into chunks
 #[derive(AssetCollection)]
 pub struct ImageHandles {
     #[asset(path = "icon.png")]
@@ -44,6 +47,38 @@ pub struct ImageHandles {
     #[asset(texture_atlas(tile_size_x = 64.0, tile_size_y = 64.0, columns = 8, rows = 8,))]
     #[asset(path = "images/fireball.png")]
     pub fireball: Handle<TextureAtlas>,
+
+    #[asset(texture_atlas(tile_size_x = 63.0, tile_size_y = 32.0, columns = 4, rows = 1,))]
+    #[asset(path = "images/pulse.png")]
+    pub pulse: Handle<TextureAtlas>,
+
+    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, columns = 4, rows = 1,))]
+    #[asset(path = "images/bolt.png")]
+    pub bolt: Handle<TextureAtlas>,
+
+    #[asset(texture_atlas(tile_size_x = 63.0, tile_size_y = 32.0, columns = 5, rows = 1,))]
+    #[asset(path = "images/spark.png")]
+    pub spark: Handle<TextureAtlas>,
+
+    #[asset(texture_atlas(tile_size_x = 95.0, tile_size_y = 32.0, columns = 4, rows = 1,))]
+    #[asset(path = "images/waveform.png")]
+    pub waveform: Handle<TextureAtlas>,
+
+    #[asset(texture_atlas(tile_size_x = 32.0, tile_size_y = 32.0, columns = 5, rows = 1,))]
+    #[asset(path = "images/hits_01.png")]
+    pub hits_01: Handle<TextureAtlas>,
+
+    #[asset(texture_atlas(tile_size_x = 32.0, tile_size_y = 32.0, columns = 7, rows = 1,))]
+    #[asset(path = "images/hits_02.png")]
+    pub hits_02: Handle<TextureAtlas>,
+
+    #[asset(texture_atlas(tile_size_x = 32.0, tile_size_y = 32.0, columns = 5, rows = 1,))]
+    #[asset(path = "images/hits_03.png")]
+    pub hits_03: Handle<TextureAtlas>,
+
+    #[asset(texture_atlas(tile_size_x = 32.0, tile_size_y = 32.0, columns = 7, rows = 1,))]
+    #[asset(path = "images/hits_04.png")]
+    pub hits_04: Handle<TextureAtlas>,
 
     #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, columns = 6, rows = 1,))]
     #[asset(path = "images/skull_buster.png")]
@@ -86,8 +121,60 @@ pub struct ImageHandles {
     pub skeleton: Handle<TextureAtlas>,
 }
 
+impl ImageHandles {
+    pub fn get_projectile(
+        &self,
+        animation_handles: &AnimationHandles,
+    ) -> (Handle<TextureAtlas>, Vec2, Handle<SpriteSheetAnimation>) {
+        let i = fastrand::u32(0..4);
+        match i {
+            0 => (
+                self.pulse.clone(),
+                (Vec2::new(63.0, 32.0) * 0.5),
+                animation_handles.idle_player.clone(),
+            ),
+            1 => (
+                self.bolt.clone(),
+                Vec2::new(16.0, 16.0),
+                animation_handles.idle_player.clone(),
+            ),
+            2 => (
+                self.spark.clone(),
+                (Vec2::new(63.0, 32.0) * 0.5),
+                animation_handles.dark_edge.clone(),
+            ),
+            3 => (
+                self.waveform.clone(),
+                (Vec2::new(95.0, 32.0) * 0.5),
+                animation_handles.idle_player.clone(),
+            ),
+            _ => (
+                self.pulse.clone(),
+                (Vec2::new(63.0, 32.0) * 0.5),
+                animation_handles.idle_player.clone(),
+            ),
+        }
+    }
+
+    pub fn get_hit(
+        &self,
+        animation_handles: &AnimationHandles,
+    ) -> (Handle<TextureAtlas>, Handle<SpriteSheetAnimation>) {
+        let i = fastrand::u32(0..4);
+        match i {
+            0 => (self.hits_01.clone(), animation_handles.five.clone()),
+            1 => (self.hits_02.clone(), animation_handles.seven.clone()),
+            2 => (self.hits_03.clone(), animation_handles.five.clone()),
+            3 => (self.hits_04.clone(), animation_handles.seven.clone()),
+            _ => (self.hits_01.clone(), animation_handles.five.clone()),
+        }
+    }
+}
+
 pub struct AnimationHandles {
     pub fireball: Handle<SpriteSheetAnimation>,
+    pub five: Handle<SpriteSheetAnimation>,
+    pub seven: Handle<SpriteSheetAnimation>,
     pub arrow_fly: Handle<SpriteSheetAnimation>,
     pub arrow_break: Handle<SpriteSheetAnimation>,
     pub idle_player: Handle<SpriteSheetAnimation>,
@@ -100,7 +187,7 @@ pub struct AnimationHandles {
     pub skeleton_idle: Handle<SpriteSheetAnimation>,
     pub skeleton_run: Handle<SpriteSheetAnimation>,
     pub dark_edge: Handle<SpriteSheetAnimation>,
-    pub skull_buster: Handle<SpriteSheetAnimation>
+    pub skull_buster: Handle<SpriteSheetAnimation>,
 }
 
 impl AnimationHandles {
@@ -132,6 +219,12 @@ fn setup_animation_handles(
         0..=60,
         Duration::from_millis(100),
     ));
+
+    let five =
+        animations.add(SpriteSheetAnimation::from_range(0..=4, Duration::from_millis(100)).once());
+
+    let seven =
+        animations.add(SpriteSheetAnimation::from_range(0..=6, Duration::from_millis(100)).once());
 
     let dark_edge = animations.add(SpriteSheetAnimation::from_range(
         0..=4,
@@ -200,6 +293,8 @@ fn setup_animation_handles(
 
     commands.insert_resource(AnimationHandles {
         fireball,
+        five,
+        seven,
         arrow_fly,
         arrow_break,
         idle_player,

@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use bevy::math::const_vec3;
 
 #[derive(Component)]
 pub struct Player;
@@ -46,7 +45,6 @@ impl SpellProgress {
 }
 
 pub const PLAYER_POS: Vec3 = const_vec3!([ARENA_OFFSET, ARENA_OFFSET, 2.0]);
-pub const PLAYER_UP: Vec3 = const_vec3!([ARENA_OFFSET, ARENA_OFFSET + 16.0, 2.0]);
 
 fn spawn_player(
     image_handles: Res<ImageHandles>,
@@ -67,7 +65,7 @@ fn spawn_player(
         .insert(Play)
         .insert(RigidBody::Sensor)
         .insert(CollisionShape::Cuboid {
-            half_extends: Vec2::splat(16.0 / 2.0).extend(0.0),
+            half_extends: Vec2::splat(16.0 / 2.0).extend(2.0),
             border_radius: None,
         })
         .insert(CollisionLayers::new(
@@ -88,7 +86,7 @@ fn spawn_player(
             .insert(Play)
             .insert(RigidBody::Sensor)
             .insert(CollisionShape::Cuboid {
-                half_extends: Vec2::splat(32.0 / 2.0).extend(0.0),
+                half_extends: Vec2::splat(32.0 / 2.0).extend(2.0),
                 border_radius: None,
             })
             .insert(CollisionLayers::new(
@@ -131,12 +129,12 @@ fn shield_state(
         mana.add_mana(0.2);
     } else {
         mana.subtract_mana(0.05);
-        spell_progress.add_progress(10.0);
+        spell_progress.add_progress(0.5);
     }
 }
 
-const OUTSIDE: Vec3 = const_vec3!([9999.0, 9999.0, 9999.0]);
-const DEFAULT: Vec3 = const_vec3!([0.0, 0.0, 3.0]);
+const SHIELD_GULAG: Vec3 = const_vec3!([2000.0, 2000.0, 3.0]);
+const BACK2ME: Vec3 = const_vec3!([0.0, 0.0, 3.0]);
 
 fn shield_visibility(
     mut query_shield: Query<(&Shield, &mut Visibility, &mut Transform)>,
@@ -150,10 +148,10 @@ fn shield_visibility(
     *old_state = shield.0;
 
     if shield.0 == false {
-        transform.translation = OUTSIDE;
+        transform.translation = SHIELD_GULAG;
         visibility.is_visible = false;
     } else {
-        transform.translation = DEFAULT;
+        transform.translation = BACK2ME;
         visibility.is_visible = true;
     }
 }
@@ -165,9 +163,9 @@ pub enum SpellType {
     DarkEdge,
 }
 
-struct UltimaEvent;
-struct UltimaTimer(Timer, Timer);
-impl Default for UltimaTimer {
+pub struct BonkEvent;
+pub struct BonkTimer(pub Timer, pub Timer);
+impl Default for BonkTimer {
     fn default() -> Self {
         Self(Timer::default(), Timer::default())
     }
@@ -177,29 +175,25 @@ fn fire_ultimate_spell(
     image_handles: Res<ImageHandles>,
     animation_handles: Res<AnimationHandles>,
     mut spell_progress: ResMut<SpellProgress>,
-    mut event_writer: EventWriter<UltimaEvent>,
-    mut done: Local<bool>,
+    mut event_writer: EventWriter<BonkEvent>,
     mut commands: Commands,
 ) {
-    if *done {
-        return;
-    }
     if spell_progress.0 < 100.0 {
         return;
     }
-    *done = true;
+
     spell_progress.0 = 0.0;
 
-    commands.insert_resource(UltimaTimer(
+    commands.insert_resource(BonkTimer(
         Timer::from_seconds(12.0, false),
         Timer::from_seconds(2.0, true),
     ));
 
     let dice = fastrand::u32(0..100);
 
-    let spell_type = if dice > 30 {
+    let spell_type = if dice >= 30 {
         SpellType::DarkEdge
-    } else if dice > 15 && dice < 30 {
+    } else if dice > 10 && dice < 30 {
         SpellType::SkullBuster
     } else {
         SpellType::Deez
@@ -225,91 +219,17 @@ fn fire_ultimate_spell(
     commands.insert_resource(CurrentSpell {
         sprite_atlas,
         animation_handle,
-        spell_type,
     });
 
-    event_writer.send(UltimaEvent);
-}
-
-struct CurrentSpell {
-    sprite_atlas: Handle<TextureAtlas>,
-    animation_handle: Handle<SpriteSheetAnimation>,
-    spell_type: SpellType,
-}
-
-fn ultima_event(
-    time: Res<Time>,
-    query_ultima_node: Query<Entity, With<UltimaNode>>,
-    current_spell: Option<Res<CurrentSpell>>,
-    mut boom_time: Local<bool>,
-    mut event_reader: EventReader<UltimaEvent>,
-    mut timer: ResMut<UltimaTimer>,
-    mut commands: Commands,
-) {
-    for _event in event_reader.iter() {
-        *boom_time = true;
-    }
-
-    if !*boom_time {
-        return;
-    }
-    let current_spell = if let Some(s) = current_spell {
-        s
-    } else {
-        return;
-    };
-
-    timer.0.tick(time.delta());
-    if timer.1.tick(time.delta()).just_finished() {
-        if !timer.0.finished() {
-            let positions = spin_me_right_round();
-            let parent = query_ultima_node.single();
-            let sprite_size = Vec2::new(32.0, 32.0);
-            let transform = Transform::from_translation(PLAYER_POS);
-            let sprite_atlas = current_spell.sprite_atlas.clone();
-            let animation_handle = current_spell.animation_handle.clone();
-            for pos in positions {
-                let child = commands
-                    .spawn_bundle(SpriteSheetBundle {
-                        texture_atlas: sprite_atlas.clone(),
-                        sprite: TextureAtlasSprite {
-                            custom_size: Some(sprite_size),
-                            ..default()
-                        },
-                        transform,
-                        ..default()
-                    })
-                    .insert(animation_handle.clone())
-                    .insert(Play)
-                    .insert(Velocity::from_linear(look_at(&PLAYER_POS, &pos)))
-                    .insert(RigidBody::KinematicPositionBased)
-                    .insert(CollisionShape::Cuboid {
-                        half_extends: (sprite_size / 2.0).extend(0.0),
-                        border_radius: None,
-                    })
-                    .insert(CollisionLayers::new(
-                        EntityLayer::Projectile,
-                        EntityLayer::Enemy,
-                    ))
-                    .insert(Speed(100.0))
-                    .insert(Projectile(ProjectileType::Special))
-                    .insert(DespawnTimer(Timer::from_seconds(5.0, false)))
-                    .id();
-
-                commands.entity(parent).add_child(child);
-            }
-        } else {
-            timer.1.pause();
-        }
-    }
+    event_writer.send(BonkEvent);
 }
 
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SpellProgress>()
-            .init_resource::<UltimaTimer>()
-            .add_event::<UltimaEvent>()
+            .init_resource::<BonkTimer>()
+            .add_event::<BonkEvent>()
             .add_system_set(SystemSet::on_enter(Playing).with_system(spawn_player))
             .add_system_set(
                 SystemSet::on_update(Playing)
@@ -328,7 +248,6 @@ impl Plugin for PlayerPlugin {
                     .label("shield_visibility")
                     .after("shield_state"),
             )
-            .add_system_set(SystemSet::on_update(Playing).with_system(fire_ultimate_spell))
-            .add_system_set(SystemSet::on_update(Playing).with_system(ultima_event));
+            .add_system_set(SystemSet::on_update(Playing).with_system(fire_ultimate_spell));
     }
 }
