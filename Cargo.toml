@@ -15,7 +15,7 @@ opt-level = 1
 opt-level = 3
 lto = "thin"
 codegen-units = 1
-#strip = true
+strip = true
 
 [features]
 default = [
@@ -45,7 +45,7 @@ bevy-inspector-egui = { version = "0.10.0", optional = true }
 bevy_asset_loader = "0.10.0"
 bevy_kira_audio = "0.9.0"
 bevy_tweening = "0.4.0"
-heron = "3.0.0"                     # Physics plugin
+heron = "3.0.0"
 benimator = "3.0.0"                 # Sprite animator plugin
 leafwing-input-manager = "0.3.0"    # Input manager plugin
 fastrand = "1.7.0"
