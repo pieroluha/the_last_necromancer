@@ -15,7 +15,7 @@ opt-level = 1
 opt-level = 3
 lto = "thin"
 codegen-units = 1
-strip = true
+#strip = true
 
 [features]
 default = [
@@ -30,6 +30,7 @@ default = [
     "bevy_kira_audio/ogg",
     "bevy_asset_loader/2d",
     "heron/2d",
+    #"web-sys/Window"
     #"bevy_hanabi/2d",
 ]
 dev = ["bevy/dynamic", "bevy-inspector-egui"]
@@ -50,5 +51,12 @@ benimator = "3.0.0"                 # Sprite animator plugin
 leafwing-input-manager = "0.3.0"    # Input manager plugin
 fastrand = "1.7.0"
 pathfinding = "3.0.12"
+#web-sys = "0.3.57"
 #bevy_hanabi = "0.2.0"               # Particle plugin
 #bevy_framepace = "0.4.0"
+
+[dependencies.web-sys]
+version = "0.3.57"
+features = [
+  "Window"
+]

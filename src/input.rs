@@ -45,10 +45,19 @@ fn input_manager_setup(mut commands: Commands) {
         });
 }
 
+// Lock the cursor so it doesn't open the context menu
+fn cursor_grab_system(
+    mut windows: ResMut<Windows>,
+) {
+    let window = windows.get_primary_mut().unwrap();
+    window.set_cursor_lock_mode(true);
+}
+
 pub struct InputPlugin;
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(InputManagerPlugin::<Action>::default())
+            .add_system_set(SystemSet::on_enter(AssetLoad).with_system(cursor_grab_system))
             .add_system_set(SystemSet::on_enter(AssetLoad).with_system(input_manager_setup));
     }
 }

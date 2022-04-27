@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use bevy::render::camera::ScalingMode;
+use bevy::window::WindowResized;
 
 #[derive(Component)]
 pub struct MainCamera;
@@ -85,6 +86,23 @@ fn set_cursor_pos(
     }
 }
 
+// Web fullscreen
+// https://github.com/bevyengine/bevy/discussions/3638
+fn update_window_size(mut windows: ResMut<Windows>, mut old_size: Local<f32>) {
+    let web_window = web_sys::window().unwrap();
+    let width = web_window.inner_width().unwrap().as_f64().unwrap() as f32;
+    let height = web_window.inner_height().unwrap().as_f64().unwrap() as f32;
+    let area = width * height;
+
+    if *old_size != area {
+        *old_size = area;
+
+        let window = windows.get_primary_mut().unwrap();
+
+        window.set_resolution(width, height);
+    }
+}
+
 pub struct MyCameraPlugin;
 impl Plugin for MyCameraPlugin {
     fn build(&self, app: &mut App) {
@@ -92,6 +110,7 @@ impl Plugin for MyCameraPlugin {
             .add_system_set(SystemSet::on_enter(AssetLoad).with_system(add_2d_camera))
             .add_system_set(SystemSet::on_enter(AssetLoad).with_system(add_ui_camera))
             .add_system_set(SystemSet::on_update(Playing).with_system(set_cursor_pos))
+            .add_system_set(SystemSet::on_update(Playing).with_system(update_window_size))
             .add_system_set(SystemSet::on_enter(Playing).with_system(edit_camera_scaling));
     }
 }
