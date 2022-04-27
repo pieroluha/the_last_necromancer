@@ -1,6 +1,9 @@
 # The Last Necromancer
 
-#### Status: Unfinished
+#### Status: Bonked and Dead
 
 #### Description: 
-* A would-be entry for the Bullet Hell Jam 2022, depending on whether I finish or not. It took me a whole day to come up with an idea and I bet that would bite me in the rear later on.
+It's on the itch.io page => [The Last Necromancer](https://pieroluha.itch.io/the-last-necromancer)
+
+;() Wah! I'm not experienced enough to know what good code looks like but I'm pretty sure this one is kinda janky, wonky, and bAd.
+I learned a lot but also kinda forgot a lot..?
