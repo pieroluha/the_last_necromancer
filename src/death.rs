@@ -1,11 +1,13 @@
 use crate::prelude::*;
 
 fn kill_lifeless_minions(
-    mut commands: Commands,
     query_minions: Query<(Entity, &Life), With<Minion>>,
+    mut commands: Commands,
+    mut play_sfx: ResMut<PlaySfx>,
 ) {
     for (minion, life) in query_minions.iter() {
         if life.0 == 0 {
+            play_sfx.death = true;
             commands.entity(minion).despawn_recursive();
         }
     }
@@ -14,10 +16,12 @@ fn kill_lifeless_minions(
 fn kill_lifeless_enemies(
     mut commands: Commands,
     mut enemy_count: ResMut<EnemyCount>,
+    mut play_sfx: ResMut<PlaySfx>,
     query_enemies: Query<(Entity, &Life, &mut Enemy)>,
 ) {
     for (enemy, life, enemy_type) in query_enemies.iter() {
         if life.0 == 0 {
+            play_sfx.oof = true;
             commands.entity(enemy).despawn_recursive();
 
             match enemy_type.0 {

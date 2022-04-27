@@ -1,5 +1,7 @@
 use crate::prelude::*;
 
+pub const MANA: f32 = 400.0;
+
 #[derive(Component)]
 pub struct Player;
 
@@ -17,10 +19,10 @@ impl Shield {
 
 impl Mana {
     pub fn add_mana(&mut self, val: f32) {
-        if self.0 < 500.0 {
+        if self.0 < MANA {
             self.0 += val;
         } else {
-            self.0 = 500.0
+            self.0 = MANA;
         }
     }
 
@@ -60,7 +62,7 @@ fn spawn_player(
         .insert(Player)
         .insert(Name::new("Player"))
         .insert(Life(20))
-        .insert(Mana(500.0))
+        .insert(Mana(MANA))
         .insert(animation_handles.idle_player.clone())
         .insert(Play)
         .insert(RigidBody::Sensor)
@@ -126,10 +128,10 @@ fn shield_state(
     }
 
     if shield.0 == false {
-        mana.add_mana(0.2);
+        mana.add_mana(0.4);
     } else {
-        mana.subtract_mana(0.05);
-        spell_progress.add_progress(0.5);
+        mana.subtract_mana(0.08);
+        spell_progress.add_progress(0.03);
     }
 }
 
@@ -164,16 +166,18 @@ pub enum SpellType {
 }
 
 pub struct BonkEvent;
+
 pub struct BonkTimer(pub Timer, pub Timer);
 impl Default for BonkTimer {
     fn default() -> Self {
-        Self(Timer::default(), Timer::default())
+        Self(Timer::from_seconds(4.0, false), Timer::from_seconds(0.5, true))
     }
 }
 
 fn fire_ultimate_spell(
     image_handles: Res<ImageHandles>,
     animation_handles: Res<AnimationHandles>,
+    mut bonk_timer: ResMut<BonkTimer>,
     mut spell_progress: ResMut<SpellProgress>,
     mut event_writer: EventWriter<BonkEvent>,
     mut commands: Commands,
@@ -184,16 +188,11 @@ fn fire_ultimate_spell(
 
     spell_progress.0 = 0.0;
 
-    commands.insert_resource(BonkTimer(
-        Timer::from_seconds(12.0, false),
-        Timer::from_seconds(2.0, true),
-    ));
-
     let dice = fastrand::u32(0..100);
 
     let spell_type = if dice >= 30 {
         SpellType::DarkEdge
-    } else if dice > 10 && dice < 30 {
+    } else if dice > 5 && dice < 30 {
         SpellType::SkullBuster
     } else {
         SpellType::Deez
@@ -219,7 +218,18 @@ fn fire_ultimate_spell(
     commands.insert_resource(CurrentSpell {
         sprite_atlas,
         animation_handle,
+        spell_type,
     });
+
+    if bonk_timer.0.finished() {
+        bonk_timer.0.reset();
+        bonk_timer.1.unpause();
+    }
+
+    //commands.insert_resource(BonkTimer(
+    //    Timer::from_seconds(4.0, false),
+    //    Timer::from_seconds(0.5, true),
+    //));
 
     event_writer.send(BonkEvent);
 }
@@ -248,6 +258,8 @@ impl Plugin for PlayerPlugin {
                     .label("shield_visibility")
                     .after("shield_state"),
             )
-            .add_system_set(SystemSet::on_update(Playing).with_system(fire_ultimate_spell));
+            .add_system_set(
+                SystemSet::on_update(Playing).with_system(fire_ultimate_spell.label("ultimate")),
+            );
     }
 }

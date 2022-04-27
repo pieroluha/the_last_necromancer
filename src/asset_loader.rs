@@ -1,6 +1,8 @@
 use crate::enemy::EnemyType;
 use crate::prelude::*;
 use bevy_asset_loader::{AssetCollection, AssetLoader};
+
+use bevy_kira_audio::AudioSource;
 use std::time::Duration;
 
 pub const HIT_SIZE: Vec2 = const_vec2!([16.0, 16.0]);
@@ -52,7 +54,7 @@ pub struct ImageHandles {
     #[asset(path = "images/pulse.png")]
     pub pulse: Handle<TextureAtlas>,
 
-    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, columns = 4, rows = 1,))]
+    #[asset(texture_atlas(tile_size_x = 32.0, tile_size_y = 32.0, columns = 4, rows = 1,))]
     #[asset(path = "images/bolt.png")]
     pub bolt: Handle<TextureAtlas>,
 
@@ -126,7 +128,7 @@ impl ImageHandles {
         &self,
         animation_handles: &AnimationHandles,
     ) -> (Handle<TextureAtlas>, Vec2, Handle<SpriteSheetAnimation>) {
-        let i = fastrand::u32(0..4);
+        let i = fastrand::u32(0..3);
         match i {
             0 => (
                 self.pulse.clone(),
@@ -134,16 +136,11 @@ impl ImageHandles {
                 animation_handles.idle_player.clone(),
             ),
             1 => (
-                self.bolt.clone(),
-                Vec2::new(16.0, 16.0),
-                animation_handles.idle_player.clone(),
-            ),
-            2 => (
                 self.spark.clone(),
                 (Vec2::new(63.0, 32.0) * 0.5),
                 animation_handles.dark_edge.clone(),
             ),
-            3 => (
+            2 => (
                 self.waveform.clone(),
                 (Vec2::new(95.0, 32.0) * 0.5),
                 animation_handles.idle_player.clone(),
@@ -311,6 +308,36 @@ fn setup_animation_handles(
     });
 }
 
+#[derive(AssetCollection)]
+pub struct SfxHandles {
+    #[asset(path = "sfx/Lament-of-the-War-MP3-Preview.ogg")]
+    pub bgm: Handle<AudioSource>,
+
+    #[asset(path = "sfx/jubba.ogg")]
+    pub jubba: Handle<AudioSource>,
+
+    #[asset(path = "sfx/oof.ogg")]
+    pub oof: Handle<AudioSource>,
+
+    #[asset(path = "sfx/skeleton_roar.ogg")]
+    pub minion_roar: Handle<AudioSource>,
+
+    #[asset(path = "sfx/21_boom_2.ogg")]
+    pub boom: Handle<AudioSource>,
+
+    #[asset(path = "sfx/skull_buster.ogg")]
+    pub skull_buster: Handle<AudioSource>,
+
+    #[asset(path = "sfx/bullet_barrage.ogg")]
+    pub bullet_barrage: Handle<AudioSource>,
+
+    #[asset(path = "sfx/blank.ogg")]
+    pub blank: Handle<AudioSource>,
+
+    #[asset(path = "sfx/deezer.ogg")]
+    pub deezer: Handle<AudioSource>,
+}
+
 pub struct AssetLoaderPlugin;
 impl Plugin for AssetLoaderPlugin {
     fn build(&self, app: &mut App) {
@@ -319,6 +346,7 @@ impl Plugin for AssetLoaderPlugin {
             .continue_to_state(Playing)
             .with_collection::<ImageHandles>()
             .with_collection::<FontHandles>()
+            .with_collection::<SfxHandles>()
             .build(app);
     }
 }

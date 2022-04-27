@@ -56,6 +56,9 @@ const SKELLY: [(f32, f32); 8] = [
     (-24.0, -24.0),
 ];
 
+const DEMON_SIZE: Vec2 = const_vec2!([16.0 * 1.0, 24.0 * 1.0]);
+const SKELLY_SIZE: Vec2 = const_vec2!([16.0 * 1.0, 16.0 * 1.0]);
+
 fn spawn_initial_minions(
     mut commands: Commands,
     image_handles: Res<ImageHandles>,
@@ -67,24 +70,32 @@ fn spawn_initial_minions(
 
     let mut minion_batch = Vec::new();
 
-    for pos in DEMON {//DEMON.iter() {
+    for pos in DEMON {
+        //DEMON.iter() {
         let pos = Vec2::new(p_pos.x + pos.0 * 2.5, p_pos.y + pos.1 * 2.5);
         minion_batch.push((
             SpriteSheetBundle {
                 texture_atlas: image_handles.demon.clone(),
                 transform: Transform::from_translation(pos.extend(1.0)),
+                sprite: TextureAtlasSprite {
+                    custom_size: Some(DEMON_SIZE),
+                    ..default()
+                },
                 ..default()
             },
             Minion::Demon,
         ));
     }
-
     for pos in SKELLY.iter() {
         let pos = Vec2::new(p_pos.x + pos.0 * 3.0, p_pos.y + pos.1 * 3.0);
         minion_batch.push((
             SpriteSheetBundle {
                 texture_atlas: image_handles.skeleton.clone(),
                 transform: Transform::from_translation(pos.extend(1.0)),
+                sprite: TextureAtlasSprite {
+                    custom_size: Some(SKELLY_SIZE),
+                    ..default()
+                },
                 ..default()
             },
             Minion::Skeleton,
@@ -93,8 +104,8 @@ fn spawn_initial_minions(
 
     for (minion, minion_type) in minion_batch.into_iter() {
         let (animation_handle, size) = match minion_type {
-            Minion::Demon => (animation_handles.demon_idle.clone(), Vec2::new(16.0, 24.0)),
-            Minion::Skeleton => (animation_handles.skeleton_idle.clone(), Vec2::splat(16.0)),
+            Minion::Demon => (animation_handles.demon_idle.clone(), DEMON_SIZE),
+            Minion::Skeleton => (animation_handles.skeleton_idle.clone(), SKELLY_SIZE),
         };
 
         let child = commands
@@ -105,7 +116,7 @@ fn spawn_initial_minions(
             .insert(SelectedUnit::default())
             .insert(animation_handle)
             .insert(Play)
-            .insert(Life(8))
+            .insert(Life(15))
             .insert(RigidBody::KinematicPositionBased)
             .insert(CollisionShape::Cuboid {
                 half_extends: (size / 2.0).extend(2.0),

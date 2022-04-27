@@ -18,8 +18,8 @@ impl Default for EnemyCount {
     fn default() -> Self {
         Self {
             current: 15,
-            mages: 100,
-            archers: 100,
+            mages: 250,
+            archers: 250,
         }
     }
 }

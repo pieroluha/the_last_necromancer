@@ -151,6 +151,7 @@ fn enemy_shoot_projectile(
 pub struct CurrentSpell {
     pub sprite_atlas: Handle<TextureAtlas>,
     pub animation_handle: Handle<SpriteSheetAnimation>,
+    pub spell_type: SpellType,
 }
 
 fn bonk_projectiles(
@@ -158,10 +159,18 @@ fn bonk_projectiles(
     query_bonk_node: Query<Entity, With<BonkNode>>,
     current_spell: Option<Res<CurrentSpell>>,
     mut boom_time: Local<bool>,
+    mut boomed: Local<bool>,
+    mut play_sfx: ResMut<PlaySfx>,
     mut event_reader: EventReader<BonkEvent>,
     mut timer: ResMut<BonkTimer>,
     mut commands: Commands,
 ) {
+    let current_spell = if let Some(s) = current_spell {
+        s
+    } else {
+        return;
+    };
+
     for _event in event_reader.iter() {
         *boom_time = true;
     }
@@ -169,23 +178,26 @@ fn bonk_projectiles(
     if !*boom_time {
         return;
     }
-    let current_spell = if let Some(s) = current_spell {
-        s
-    } else {
-        return;
-    };
+
+    if !*boomed {
+        match current_spell.spell_type {
+            SpellType::DarkEdge => play_sfx.bullet_barrage = true,
+            SpellType::SkullBuster => play_sfx.skull_buster = true,
+            SpellType::Deez => play_sfx.deezer = true,
+        }
+    }
+    *boomed = true;
 
     timer.0.tick(time.delta());
     if timer.1.tick(time.delta()).just_finished() {
         if !timer.0.finished() {
-            let positions = spin_me_right_round();
+            //let positions = spin_me_right_round();
             let parent = query_bonk_node.single();
-            let sprite_size = Vec2::new(64.0, 64.0);
+            let sprite_size = Vec2::new(32.0, 32.0);
             let transform = Transform::from_translation(PLAYER_POS);
             let sprite_atlas = current_spell.sprite_atlas.clone();
             let animation_handle = current_spell.animation_handle.clone();
-            for pos in positions {
-                println!("{}", look_at(&PLAYER_POS, &pos));
+            for pos in PROJECTILE_TARGETS {
                 let child = commands
                     .spawn_bundle(SpriteSheetBundle {
                         texture_atlas: sprite_atlas.clone(),
@@ -218,6 +230,7 @@ fn bonk_projectiles(
             }
         } else {
             *boom_time = false;
+            *boomed = false;
             timer.1.pause();
         }
     }
@@ -234,6 +247,7 @@ fn move_projectiles(
 
 fn projectile_hits(
     mut commands: Commands,
+    mut play_sfx: ResMut<PlaySfx>,
     image_handles: Res<ImageHandles>,
     animation_handles: Res<AnimationHandles>,
     query_dababy: Query<Entity, With<DababyNode>>,
@@ -245,7 +259,9 @@ fn projectile_hits(
         }
         let parent = query_dababy.single();
         let pos = hit_data.position_of_hit.clone();
+
         commands.entity(projectile).despawn_recursive();
+        play_sfx.boom = true;
 
         let (image_handle, animation_handle) = image_handles.get_hit(&animation_handles);
 
@@ -294,7 +310,9 @@ impl Plugin for ProjectilesPlugin {
                     .before("despawn_timer"),
             )
             .add_system_set(SystemSet::on_update(Playing).with_system(move_projectiles))
-            .add_system_set(SystemSet::on_update(Playing).with_system(bonk_projectiles))
+            .add_system_set(
+                SystemSet::on_update(Playing).with_system(bonk_projectiles.after("ultimate")),
+            )
             .add_system_set(SystemSet::on_update(Playing).with_system(projectile_hits))
             .add_system_set(SystemSet::on_enter(Playing).with_system(setup_bonk_parent))
             .add_system_set(SystemSet::on_enter(Playing).with_system(setup_dababy_parent));

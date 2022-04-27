@@ -72,6 +72,7 @@ fn assign_goal(
     query_action: Query<&ActionState<Action>, With<ActionManager>>,
     cursor_position: Res<CursorPosition>,
     selected_entities: Res<SelectedEntities>,
+    mut play_sfx: ResMut<PlaySfx>,
     mut query_selected_unit: Query<(&mut SelectedUnit, &Transform)>,
 ) {
     let action = query_action.single();
@@ -79,7 +80,9 @@ fn assign_goal(
         return;
     }
 
-    println!("Cursor Pos: {}", cursor_position.offset_pos_integer());
+    play_sfx.order = true;
+
+    //println!("Cursor Pos: {}", cursor_position.offset_pos_integer());
 
     let mut goals = VecDeque::new();
     let goal = vec_pos_to_grid(&cursor_position.offset_pos_integer());
@@ -147,7 +150,7 @@ fn assign_goal(
 }
 
 const MINION_SPEED: f32 = 200.0;
-const TARGET_DISTANCE: f32 = 16.0;
+const TARGET_DISTANCE: f32 = 6.0;
 fn move_selected_units(
     time: Res<Time>,
     mut query_selected_unit: Query<(&mut SelectedUnit, &mut Transform, &mut AnimState)>,

@@ -17,7 +17,7 @@ mod player;
 mod projectiles;
 mod selection_box;
 mod ui;
-mod win_lose;
+mod sfx;
 mod prelude {
     pub use crate::arena::*;
     pub use crate::asset_loader::*;
@@ -33,7 +33,7 @@ mod prelude {
     pub use crate::projectiles::*;
     pub use crate::selection_box::*;
     pub use crate::ui::*;
-    pub use crate::win_lose::*;
+    pub use crate::sfx::*;
     pub use benimator::*;
     pub use bevy::math::const_vec2;
     pub use bevy::math::const_vec3;
@@ -45,7 +45,6 @@ mod prelude {
     #[derive(Clone, Eq, PartialEq, Debug, Hash)]
     pub enum GameState {
         AssetLoad,
-        StartMenu,
         Playing,
         Winner,
         GameOver,
@@ -100,7 +99,7 @@ fn main() {
         .add_plugin(SelectionBoxPlugin)
         .add_plugin(DeathPlugin)
         .add_plugin(UiPlugin)
-        .add_plugin(WinLosePlugin)
+        .add_plugin(SfxPlugin)
         .add_plugin(ProjectilesPlugin);
 
     #[cfg(feature = "dev")]

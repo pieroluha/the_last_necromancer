@@ -22,7 +22,7 @@ pub const PROJECTILE_MASK: [EntityLayer; 3] = [
 
 struct HitEvent(u32, ProjectileType);
 
-const PROJECTILE_GULAG: Vec3 = const_vec3!([6969.0, 6969.0, 0.0]);
+const PROJECTILE_GULAG: Vec3 = const_vec3!([6969.0, 4207.0, 0.0]);
 
 fn projectile_collisions(
     mut query_projectiles: Query<(&Projectile, Entity, &mut Transform, &mut ProjectileHitData)>,
@@ -124,7 +124,6 @@ fn enemy_collision(
 ) {
     for hit in hits.iter() {
         for (mut life, entity) in query_entities.iter_mut() {
-
             if hit.0 != entity.id() {
                 continue;
             }
