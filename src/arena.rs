@@ -51,7 +51,7 @@ pub const ARENA: [u8; ARENA_GRID_SIZE] = [
 ];
 
 fn setup_arena(image_handles: Res<ImageHandles>, mut commands: Commands) {
-    let transform = Transform::from_xyz(ARENA_OFFSET, ARENA_OFFSET, 0.0);
+    let transform = Transform::from_xyz(ARENA_OFFSET, ARENA_OFFSET, 1.0);
     commands
         .spawn_bundle(SpriteBundle {
             texture: image_handles.arena.clone(),
@@ -106,10 +106,19 @@ impl Map {
     }
 }
 
+fn map_background(mut commands: Commands, image_handles: Res<ImageHandles>) {
+    commands.spawn_bundle(SpriteBundle {
+        texture: image_handles.bg.clone(),
+        transform: Transform::from_translation(PLAYER_POS.truncate().extend(0.0)),
+        ..default()
+    });
+}
+
 pub struct ArenaPlugin;
 impl Plugin for ArenaPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Map>()
+            .add_system_set(SystemSet::on_enter(Playing).with_system(map_background))
             .add_system_set(SystemSet::on_enter(Playing).with_system(setup_arena));
     }
 }

@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use bevy::render::camera::ScalingMode;
-use bevy::window::WindowResized;
+//use bevy::window::WindowResized;
 
 #[derive(Component)]
 pub struct MainCamera;

@@ -76,7 +76,7 @@ fn spawn_initial_minions(
         minion_batch.push((
             SpriteSheetBundle {
                 texture_atlas: image_handles.demon.clone(),
-                transform: Transform::from_translation(pos.extend(1.0)),
+                transform: Transform::from_translation(pos.extend(2.0)),
                 sprite: TextureAtlasSprite {
                     custom_size: Some(DEMON_SIZE),
                     ..default()
@@ -91,7 +91,7 @@ fn spawn_initial_minions(
         minion_batch.push((
             SpriteSheetBundle {
                 texture_atlas: image_handles.skeleton.clone(),
-                transform: Transform::from_translation(pos.extend(1.0)),
+                transform: Transform::from_translation(pos.extend(2.0)),
                 sprite: TextureAtlasSprite {
                     custom_size: Some(SKELLY_SIZE),
                     ..default()

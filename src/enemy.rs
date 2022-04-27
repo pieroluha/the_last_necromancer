@@ -63,7 +63,7 @@ fn spawn_initial_enemies(
         let (x, y) = random_pos(i);
         mage_batch.push(SpriteSheetBundle {
             texture_atlas: image_handles.enemies.clone(),
-            transform: Transform::from_xyz(x, y, 1.0),
+            transform: Transform::from_xyz(x, y, 2.0),
             ..default()
         })
     }
@@ -111,7 +111,7 @@ fn current_enemy_count(
 
         let mage = SpriteSheetBundle {
             texture_atlas: image_handles.enemies.clone(),
-            transform: Transform::from_xyz(x, y, 1.0),
+            transform: Transform::from_xyz(x, y, 2.0),
             ..default()
         };
 
@@ -241,7 +241,7 @@ fn teleport_enemy(
                 random_pos(12)
             };
 
-            enemy.translation = Vec2::new(pos.0, pos.1).extend(1.0);
+            enemy.translation = Vec2::new(pos.0, pos.1).extend(2.0);
         }
     }
 }

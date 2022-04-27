@@ -22,34 +22,35 @@ pub fn heading(transform: &Transform, offset: f32) -> Transform {
     transform
 }
 
-use std::f32::consts::PI;
-const MORE_DIRECTIONS: [(f32, f32); 8] = [
-    (0.0, 16.0),
-    (0.0, -16.0),
-    (16.0, 0.0),
-    (-16.0, 0.0),
-    (16.0, 16.0),
-    (-16.0, 16.0),
-    (16.0, -16.0),
-    (-16.0, -16.0),
-];
-
-pub fn spin_me_right_round() -> Vec<Vec3> {
-    let mut projectiles = Vec::new();
-
-    for pos in MORE_DIRECTIONS.iter() {
-        let transform = PLAYER_POS + Vec3::new(pos.0, pos.1, 0.0);
-        projectiles.push(transform);
-    }
-
-    projectiles
-}
+//use std::f32::consts::PI;
+//const MORE_DIRECTIONS: [(f32, f32); 8] = [
+//    (0.0, 16.0),
+//    (0.0, -16.0),
+//    (16.0, 0.0),
+//    (-16.0, 0.0),
+//    (16.0, 16.0),
+//    (-16.0, 16.0),
+//    (16.0, -16.0),
+//    (-16.0, -16.0),
+//];
+//
+//pub fn spin_me_right_round() -> Vec<Vec3> {
+//    let mut projectiles = Vec::new();
+//
+//    for pos in MORE_DIRECTIONS.iter() {
+//        let transform = PLAYER_POS + Vec3::new(pos.0, pos.1, 0.0);
+//        projectiles.push(transform);
+//    }
+//
+//    projectiles
+//}
 
 //Cursor Pos: [80, 512]
 //Cursor Pos: [512, 512]
 //Cursor Pos: [80, 80]
 //Cursor Pos: [512, 80]
 
+// Caveman brain
 pub const PROJECTILE_TARGETS: [Vec3; 70] = [
     const_vec3!([80.0, 512.0, 0.0]),
     const_vec3!([80.0 + (16.0 * 2.0), 512.0, 0.0]),
@@ -123,11 +124,11 @@ pub const PROJECTILE_TARGETS: [Vec3; 70] = [
     const_vec3!([80.0, 80.0 + (16.0 * 34.0), 0.0]),
 ];
 
-pub fn rotate2d(point: Vec3, angle: f32) -> Vec3 {
-    let x = point.x * angle.cos() - point.y * angle.sin();
-    let y = point.x * angle.sin() + point.y * angle.cos();
-    Vec3::new(x, y, 2.0)
-}
+//pub fn rotate2d(point: Vec3, angle: f32) -> Vec3 {
+//    let x = point.x * angle.cos() - point.y * angle.sin();
+//    let y = point.x * angle.sin() + point.y * angle.cos();
+//    Vec3::new(x, y, 2.0)
+//}
 
 //pub fn get_world_pos(transform: &Transform) -> Vec2 {
 //    let pos = transform.translation.truncate();

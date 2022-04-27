@@ -22,6 +22,9 @@ pub struct ImageHandles {
     #[asset(path = "images/arena.png")]
     pub arena: Handle<Image>,
 
+    #[asset(path = "images/fantasy3.png")]
+    pub bg: Handle<Image>,
+
     #[asset(path = "images/won.png")]
     pub win: Handle<Image>,
 
@@ -110,7 +113,13 @@ pub struct ImageHandles {
     #[asset(path = "images/shield.png")]
     pub shield: Handle<TextureAtlas>,
 
-    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 28.0, columns = 4, rows = 4, padding_y = 1.0))]
+    #[asset(texture_atlas(
+        tile_size_x = 16.0,
+        tile_size_y = 28.0,
+        columns = 4,
+        rows = 4,
+        padding_y = 1.0
+    ))]
     #[asset(path = "images/enemies.png")]
     pub enemies: Handle<TextureAtlas>,
 
